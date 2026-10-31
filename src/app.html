@@ -1,0 +1,817 @@
+<title>Ron Word Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: a single-column "quest journal" — sticky top bar, stacked mission cards, bottom tab bar; lessons open in a full-screen stage. */
+:root{
+  --bg:#EAF3FB; --surface:#FFFFFF; --surface-2:#F3F8FD; --ink:#1B2845; --ink-2:#55627F; --line:#D5E2F0;
+  --accent:#FF6B35; --accent-ink:#FFFFFF; --sun:#FFB800; --good:#1FA463; --good-bg:#DDF5E8; --bad:#E0435E; --bad-bg:#FCE3E8;
+  --lv-s:#1FA463; --lv-m:#2D7FF9; --lv-f:#8A4FFF; --mark:#FFE7A3;
+  --display:"Baloo 2", "Nunito", system-ui, sans-serif; --body:"Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r:18px; --shadow:0 2px 0 var(--line);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1628; --surface:#18223B; --surface-2:#1F2B48; --ink:#EAF0FF; --ink-2:#A3B0CC; --line:#2C3A5C;
+  --accent:#FF7F4F; --accent-ink:#1B1206; --sun:#FFC633; --good:#3CCB84; --good-bg:#173A2C; --bad:#FF6B83; --bad-bg:#3E1D27;
+  --lv-s:#3CCB84; --lv-m:#5E9DFF; --lv-f:#A97BFF; --mark:#5A4A16; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1628; --surface:#18223B; --surface-2:#1F2B48; --ink:#EAF0FF; --ink-2:#A3B0CC; --line:#2C3A5C;
+  --accent:#FF7F4F; --accent-ink:#1B1206; --sun:#FFC633; --good:#3CCB84; --good-bg:#173A2C; --bad:#FF6B83; --bad-bg:#3E1D27;
+  --lv-s:#3CCB84; --lv-m:#5E9DFF; --lv-f:#A97BFF; --mark:#5A4A16; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--lv-m);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg)}
+.top .wrap{display:flex;align-items:center;gap:12px;padding-block:12px}
+.logo{font-family:var(--display);font-weight:800;font-size:1.45rem;letter-spacing:-.01em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo b{color:var(--accent)}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:800;font-variant-numeric:tabular-nums}
+main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+main .wrap{display:flex;flex-direction:column;gap:16px;padding-block:8px 24px}
+.hello{display:flex;flex-direction:column;gap:2px}
+.hello h1{font-size:2rem}
+.hello p{margin:0;color:var(--ink-2);font-weight:600}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;min-width:0}
+.mission{flex-direction:row;align-items:center;gap:16px}
+.mission .ico{font-size:2.6rem;width:64px;height:64px;flex:none;display:grid;place-items:center;background:var(--surface-2);border-radius:16px}
+.mission .txt{flex:1;min-width:0}
+.mission h2{font-size:1.3rem}
+.mission p{margin:2px 0 0;color:var(--ink-2);font-size:.95rem}
+.done-tag{color:var(--good);font-weight:800}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-weight:700;font-size:1.1rem;padding:10px 20px;border-radius:14px;box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.btn.ghost{background:var(--surface-2);color:var(--ink);box-shadow:0 4px 0 var(--line)}
+.btn.good{background:var(--good);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--good) 60%,#000)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.small{font-size:.95rem;padding:6px 14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:12px;text-align:center}
+.stat b{display:block;font-family:var(--display);font-size:1.7rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--ink-2);font-weight:700}
+.week{display:flex;justify-content:space-between;gap:6px}
+.day{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.75rem;font-weight:800;color:var(--ink-2)}
+.day i{width:100%;max-width:40px;aspect-ratio:1;border-radius:12px;background:var(--surface-2);border:2px dashed var(--line);display:grid;place-items:center;font-style:normal;font-size:1.1rem}
+.day.on i{background:var(--sun);border:2px solid var(--sun)}
+.day.today span{color:var(--accent)}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.sec-h h2{font-size:1.25rem}
+.muted{color:var(--ink-2)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 14px;font-weight:800;font-size:.9rem}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.lv{display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:6px;color:#fff;vertical-align:middle}
+.lv-S{background:var(--lv-s)}.lv-M{background:var(--lv-m)}.lv-F{background:var(--lv-f)}
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.topic{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+.topic .e{font-size:2rem}
+.topic b{font-family:var(--display);font-size:1.05rem;line-height:1.2}
+.topic small{color:var(--ink-2);font-weight:700}
+.bar{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.wlist{display:flex;flex-direction:column}
+.wrow{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.wrow:last-child{border-bottom:0}
+.wrow .e{width:36px;font-size:1.5rem;text-align:center;flex:none}
+.wrow .w{flex:1;min-width:0}
+.wrow .w b{font-size:1.05rem}
+.wrow .w div{color:var(--ink-2);font-size:.9rem}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--line);flex:none}
+.dot.l{background:var(--sun)}.dot.m{background:var(--good)}
+.spk{width:40px;height:40px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;font-size:1.15rem;flex:none}
+.back{font-weight:800;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;padding:4px 0}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:2px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .wrap{display:grid;grid-template-columns:repeat(5,1fr);padding-block:6px}
+nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 0;font-weight:800;font-size:.78rem;color:var(--ink-2);border-radius:12px}
+nav.tabs button span{font-size:1.45rem;line-height:1.2}
+nav.tabs button[aria-current="page"]{color:var(--accent);background:var(--surface-2)}
+/* reading */
+.passage{font-size:1.15rem;line-height:1.75}
+.passage p{margin:0 0 .9em}
+.vw{background:linear-gradient(transparent 62%,var(--mark) 62%);cursor:pointer;border-radius:2px}
+.q{display:flex;flex-direction:column;gap:8px;padding-top:4px}
+.q b{font-size:1.05rem}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:2px solid var(--line);background:var(--surface-2);border-radius:12px;padding:8px 14px;font-weight:700;text-align:left}
+.opt[aria-pressed="true"]{border-color:var(--lv-m);background:color-mix(in srgb,var(--lv-m) 14%,var(--surface))}
+.opt.ok{border-color:var(--good);background:var(--good-bg)}
+.opt.no{border-color:var(--bad);background:var(--bad-bg)}
+.rlist{display:flex;flex-direction:column;gap:10px}
+.ritem{display:flex;align-items:center;gap:12px;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:12px 14px}
+.ritem .t{flex:1;min-width:0}
+.ritem .t b{font-family:var(--display);font-size:1.08rem;display:block;line-height:1.2}
+.ritem .t small{color:var(--ink-2);font-weight:600}
+.score{font-weight:800;color:var(--good);font-variant-numeric:tabular-nums}
+.note{background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:.92rem;color:var(--ink-2)}
+/* stage */
+.stage{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.stage-top{display:flex;align-items:center;gap:12px;padding-block:14px}
+.x{width:40px;height:40px;border-radius:12px;font-size:1.4rem;color:var(--ink-2);flex:none}
+.prog{flex:1;height:14px;background:var(--surface);border:2px solid var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--good);transition:width .3s}
+.stage-body{flex:1;overflow-y:auto}
+.stage-body .wrap{display:flex;flex-direction:column;gap:18px;padding-block:8px 24px;min-height:100%}
+.prompt{font-family:var(--display);font-weight:700;font-size:1.35rem;text-align:center}
+.flash{align-items:center;text-align:center;padding:28px 18px;gap:8px}
+.flash .big{font-size:5.5rem;line-height:1.1}
+.flash .word{font-family:var(--display);font-weight:800;font-size:2.6rem;line-height:1.1;overflow-wrap:anywhere}
+.flash .vi{font-size:1.3rem;font-weight:700;color:var(--ink-2)}
+.flash .tag{font-size:.8rem;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em}
+.hear{width:84px;height:84px;border-radius:50%;background:var(--lv-m);color:#fff;font-size:2.2rem;display:grid;place-items:center;margin:0 auto;box-shadow:0 5px 0 color-mix(in srgb,var(--lv-m) 60%,#000)}
+.hear:active{transform:translateY(3px)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:14px 10px;min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 4px 0 var(--line);font-weight:800;font-size:1.1rem;text-align:center;overflow-wrap:anywhere}
+.choice .ce{font-size:2.2rem;line-height:1.1}
+.choice .cv{font-size:.95rem;font-weight:700;color:var(--ink-2)}
+.choice.ok{border-color:var(--good);background:var(--good-bg);box-shadow:0 4px 0 var(--good)}
+.choice.no{border-color:var(--bad);background:var(--bad-bg);box-shadow:0 4px 0 var(--bad)}
+.slots{display:flex;justify-content:center;flex-wrap:wrap;gap:6px}
+.slot{width:42px;height:50px;border-bottom:4px solid var(--line);font-family:var(--display);font-weight:800;font-size:1.9rem;display:grid;place-items:center;text-transform:lowercase}
+.slot.ok{color:var(--good);border-color:var(--good)}.slot.no{color:var(--bad);border-color:var(--bad)}
+.tiles{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
+.tile{width:48px;height:52px;border-radius:12px;background:var(--surface);border:2px solid var(--line);box-shadow:0 4px 0 var(--line);font-family:var(--display);font-weight:800;font-size:1.6rem}
+.tile[disabled]{opacity:.25}
+.feedback{border-top:2px solid var(--line);background:var(--surface)}
+.feedback .wrap{display:flex;align-items:center;gap:12px;padding-block:14px}
+.feedback .msg{flex:1;min-width:0;font-weight:800;font-size:1.05rem}
+.feedback.ok{background:var(--good-bg);border-color:var(--good)}.feedback.ok .msg{color:var(--good)}
+.feedback.no{background:var(--bad-bg);border-color:var(--bad)}.feedback.no .msg{color:var(--bad)}
+.finish{align-items:center;text-align:center;justify-content:center;flex:1}
+.finish .trophy{font-size:5rem}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:2px solid var(--line);border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.12);padding-bottom:env(safe-area-inset-bottom,0px)}
+.sheet .wrap{display:flex;align-items:center;gap:14px;padding-block:16px}
+.sheet .e{font-size:2.6rem}
+.sheet .t{flex:1;min-width:0}
+.sheet .t b{font-family:var(--display);font-size:1.5rem;display:block;line-height:1.2}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label.ck{display:flex;align-items:center;gap:8px;font-weight:700}
+select,input[type=range]{font:inherit}
+select{background:var(--surface-2);border:2px solid var(--line);border-radius:10px;padding:6px 10px;color:var(--ink)}
+.lvbar{display:grid;grid-template-columns:90px 1fr 70px;gap:10px;align-items:center;font-weight:700;font-size:.92rem}
+.lvbar .bar{height:12px}
+.lvbar span:last-child{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.ai-out{white-space:pre-wrap}
+
+.lesson{gap:14px}
+.lesson-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800}
+.lesson h2{font-size:1.5rem}
+.wchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:inherit}
+.flash .wchips{justify-content:center}
+.wchip{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:2px solid var(--line);border-radius:999px;padding:4px 12px 4px 8px;font-weight:800;font-size:1.05rem}
+.wchip span{font-size:1.3rem}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.parts li{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:.8rem;font-weight:800;color:var(--ink-2);background:var(--surface-2);border-radius:12px;padding:8px 4px}
+.parts li span{font-size:1.5rem}
+.parts.big{grid-template-columns:1fr;gap:10px}
+.parts.big li{flex-direction:row;text-align:left;gap:12px;padding:12px 14px;background:var(--surface);border:2px solid var(--line);font-size:1rem;color:var(--ink)}
+.parts.big li small{display:block;color:var(--ink-2);font-weight:600;font-size:.88rem}
+.btn.big{font-size:1.3rem;padding:14px 20px}
+.feedback .sub{font-weight:600;font-size:.95rem;color:var(--ink);margin-top:2px}
+.vw.hl{background:var(--sun);color:#1B2845;font-weight:800;padding:0 3px;border-radius:5px}
+.tag{font-size:.8rem;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em}
+@media (max-width:420px){.parts li{font-size:.72rem}}
+@media (max-width:420px){.flash .word{font-size:2.1rem}.choices{gap:10px}.hello h1{font-size:1.7rem}}
+
+/* games */
+:root{--b1:#FF8FA3;--b2:#FFD166;--b3:#7BDFF2;--b4:#B2F7A1;--b5:#C9A7FF;--b-ink:#1B2845}
+.gtitle{flex:1;min-width:0;font-family:var(--display);font-weight:800;font-size:1.2rem;text-align:center}
+.gcards{display:flex;flex-direction:column;gap:12px}
+.gcard{display:flex;align-items:center;gap:14px;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:0 4px 0 var(--line)}
+.gcard:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.gcard .gi{font-size:2.6rem;width:60px;height:60px;display:grid;place-items:center;background:var(--surface-2);border-radius:16px;flex:none}
+.gcard b{display:block;font-family:var(--display);font-size:1.2rem;line-height:1.2}
+.gcard small{color:var(--ink-2);font-weight:600}
+.ghud{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800}
+.gprompt{text-align:center;font-weight:700;min-height:1.5em}
+.arena{position:relative;height:min(58vh,520px);border-radius:var(--r);overflow:hidden;border:2px solid var(--line);background:linear-gradient(var(--surface-2),var(--surface));touch-action:manipulation}
+.balloon{position:absolute;left:0;top:0;width:96px;height:112px;border-radius:50% 50% 46% 46%;background:var(--bc);color:var(--b-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;box-shadow:inset -8px -10px 0 rgba(0,0,0,.08);will-change:transform;padding:4px}
+.balloon::after{content:"";position:absolute;bottom:-26px;left:50%;width:2px;height:26px;background:var(--ink-2);opacity:.5}
+.balloon .be{font-size:1.9rem;line-height:1.1}
+.balloon .bw{font-weight:800;font-size:.85rem;line-height:1.1;text-align:center;overflow-wrap:anywhere}
+.balloon.popped{animation:popb .3s ease-out forwards}
+.balloon.shake .be{animation:shk .35s}
+@keyframes popb{to{opacity:0;scale:1.6}}
+@keyframes shk{25%{translate:-6px}75%{translate:6px}}
+.mem{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:8px}
+.mcard{position:relative;aspect-ratio:3/4;border-radius:14px;max-width:100%}
+.mcard .mback,.mcard .mface{position:absolute;inset:0;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px;text-align:center;border:2px solid var(--line);transition:transform .3s;backface-visibility:hidden}
+.mcard .mback{background:var(--lv-m);color:#fff;font-family:var(--display);font-weight:800;font-size:1.8rem;border-color:transparent}
+.mcard .mface{background:var(--surface);transform:rotateY(180deg)}
+.mcard.up .mback{transform:rotateY(180deg)}.mcard.up .mface{transform:rotateY(0)}
+.mcard.got .mface{border-color:var(--good);background:var(--good-bg)}
+.mface .me{font-size:1.8rem;line-height:1.1}.mface .mv{font-size:.7rem;font-weight:700;color:var(--ink-2);line-height:1.15}
+.mface .mw{font-family:var(--display);font-weight:800;font-size:.95rem;line-height:1.1;overflow-wrap:anywhere}
+.lives{font-size:1.3rem;letter-spacing:2px}
+.kb{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.key{height:46px;border-radius:10px;background:var(--surface);border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-family:var(--display);font-weight:800;font-size:1.3rem}
+.key.ok{background:var(--good-bg);border-color:var(--good)}.key.no{background:var(--bad-bg);border-color:var(--bad);opacity:.6}
+@media (max-width:420px){nav.tabs button{font-size:.7rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@keyframes pop{0%{transform:scale(.9)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+.pop{animation:pop .35s ease-out}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="logo">Ron <b>Word</b> Quest</div>
+  <span class="pill" title="Chuỗi ngày học">🔥 <span id="streak">0</span></span>
+  <span class="pill" title="Số sao">⭐ <span id="stars">0</span></span>
+</div></header>
+<main id="main"><div class="wrap" id="view"></div></main>
+<nav class="tabs" aria-label="Điều hướng"><div class="wrap">
+  <button data-tab="today"><span>🏠</span>Hôm nay</button>
+  <button data-tab="topics"><span>📚</span>Chủ đề</button>
+  <button data-tab="read"><span>📖</span>Bài đọc</button>
+  <button data-tab="games"><span>🎮</span>Game</button>
+  <button data-tab="me"><span>🏆</span>Tiến bộ</button>
+</div></nav>
+<div id="stage" class="stage" hidden></div>
+<div id="sheet" class="sheet" hidden></div>
+
+<script>
+/*__VOCAB__*/
+/*__READINGS__*/
+/*__LESSONS__*/
+</script>
+<script>
+(function(){
+"use strict";
+// ---------- data ----------
+const LV={S:{name:'Starters',full:'Pre A1 Starters',cefr:'Pre A1'},M:{name:'Movers',full:'A1 Movers',cefr:'A1'},F:{name:'Flyers',full:'A2 Flyers',cefr:'A2'}};
+const LVS=['S','M','F'];
+const TOPICS=[]; const WORDS=new Map(); const ORDER={S:[],M:[],F:[]};
+for(const [id,en,vi,icon,lv] of TOPICS_RAW){
+  const t={id,en,vi,icon,lv:{}};
+  for(const L of LVS){ if(!lv[L]) continue; t.lv[L]=[];
+    for(const it of lv[L].split(';')){ const [w,mean,em]=it.split('|'); const key=w.toLowerCase();
+      if(!WORDS.has(key)){ WORDS.set(key,{key,w,vi:mean,em:em||'',lv:L,topic:id}); ORDER[L].push(key); }
+      else { const o=WORDS.get(key); if(!o.em&&em) o.em=em; }
+      t.lv[L].push(key);
+    }
+  }
+  TOPICS.push(t);
+}
+const TOTAL=WORDS.size;
+const INT=[0,1,2,4,7,15,30];
+
+// ---------- storage ----------
+const store={get(k,d){try{const v=localStorage.getItem('rwq_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('rwq_'+k,JSON.stringify(v))}catch(e){}}};
+const S=Object.assign({srs:{},stars:0,streak:0,lastLesson:null,levels:['S'],perDay:10,rate:0.85,readDone:{},lessonDays:{},ai:[],done:{},gen:{}},store.get('state',{}));
+function save(){store.set('state',S);hdr()}
+function today(){const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/86400000)}
+function dateOf(n){return new Date(n*86400000+new Date().getTimezoneOffset()*60000)}
+
+// ---------- helpers ----------
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.random()*a.length|0];
+function box(k){return (S.srs[k]&&S.srs[k].b)||0}
+function status(k){const b=box(k);return b>=4?'m':b>=1?'l':''}
+function speakText(w){return w.replace(/\//g,', ').replace(/\ba\.m\./,'A M').replace(/\bp\.m\./,'P M')}
+function spellOf(w){const s=w.split('/')[0];return /^[a-z]{3,10}$/i.test(s)?s.toLowerCase():null}
+
+// ---------- speech & sound ----------
+let VOICE=null; const HAS_TTS='speechSynthesis' in window;
+function pickVoice(){ if(!HAS_TTS) return; const vs=speechSynthesis.getVoices(); VOICE=vs.find(v=>/en-GB/i.test(v.lang)&&/female|libby|sonia|serena|kate|google uk/i.test(v.name))||vs.find(v=>/en-GB/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null }
+if(HAS_TTS){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(text,rate,onend){ if(!HAS_TTS){onend&&onend();return} try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=VOICE?VOICE.lang:'en-GB';if(VOICE)u.voice=VOICE;u.rate=rate||S.rate;if(onend)u.onend=onend;speechSynthesis.speak(u)}catch(e){} }
+let AC=null;
+function tone(ok){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime;const notes=ok?[660,880]:[300,220];notes.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type=ok?'triangle':'sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,t+i*.12);g.gain.exponentialRampToValueAtTime(.25,t+i*.12+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.12+.2);o.connect(g).connect(AC.destination);o.start(t+i*.12);o.stop(t+i*.12+.22)})}catch(e){}}
+
+// ---------- header ----------
+function hdr(){ $('#stars').textContent=S.stars; const t=today(); $('#streak').textContent=(S.lastLesson===t||S.lastLesson===t-1)?S.streak:0 }
+
+// ---------- course: 5 words a day ----------
+const COURSE=[];
+LESSONS_S.forEach((l,i)=>COURSE.push({id:'S'+(i+1),lv:'S',n:i+1,w:l.w.split(','),vi:l.vi,t:l.t,q:l.q}));
+for(const L of ['M','F']){ const ks=ORDER[L]; for(let i=0;i<ks.length;i+=5) COURSE.push({id:L+(i/5+1),lv:L,n:i/5+1,w:ks.slice(i,i+5),vi:'',t:null,q:null}) }
+function course(){return COURSE.filter(c=>S.levels.includes(c.lv))}
+function withReading(les){ if(les.t) return les; const g=S.gen[les.id]; return g?Object.assign({},les,g):les }
+function nextLesson(){return course().find(x=>!S.done[x.id])||null}
+function doneToday(){const t=today();return course().filter(x=>S.done[x.id]&&S.done[x.id].day===t)}
+function dueKeys(){const t=today();return Object.keys(S.srs).filter(k=>WORDS.has(k)&&S.srs[k].b>0&&S.srs[k].due<=t).sort((a,b)=>S.srs[a].due-S.srs[b].due)}
+const PARTS=[['🧠','Học từ mới','Nghe, nhìn và nhớ 5 từ mới'],['✏️','Luyện từ vựng','Chọn nghĩa đúng và xếp chữ thành từ'],['🎧','Luyện nghe','Nghe từ và câu, chọn đáp án đúng'],['📖','Đọc hiểu','Đọc đoạn văn có 5 từ hôm nay và trả lời câu hỏi']];
+
+// ---------- router ----------
+let TAB='today';
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+function go(tab,arg){TAB=tab;document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===(tab==='topic'?'topics':tab==='passage'?'read':tab)?'page':'false'));closeSheet();window.scrollTo(0,0);({today:vToday,topics:vTopics,topic:vTopic,read:vRead,passage:vPassage,games:vGames,me:vMe})[tab](arg)}
+const V=()=>$('#view');
+
+// ---------- Today ----------
+function wordChips(keys){return `<div class="wchips">${keys.map(k=>{const w=WORDS.get(k);return `<span class="wchip"><span>${w.em||'🔤'}</span>${esc(w.w)}</span>`}).join('')}</div>`}
+function vToday(){
+  const t=today(), dt=doneToday(), nx=nextLesson(), due=dueKeys();
+  const days=['CN','T2','T3','T4','T5','T6','T7'];
+  let week='';for(let i=6;i>=0;i--){const d=t-i;const on=!!S.lessonDays[d];week+=`<div class="day ${on?'on':''} ${i===0?'today':''}"><i>${on?'⭐':''}</i><span>${i===0?'Nay':days[dateOf(d).getDay()]}</span></div>`}
+  const learned=[...WORDS.keys()].filter(k=>box(k)>=1).length, mastered=[...WORDS.keys()].filter(k=>box(k)>=4).length;
+  const dstr=dateOf(t).toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'numeric'});
+  const total=course().length, doneN=course().filter(x=>S.done[x.id]).length;
+  let main='';
+  if(dt.length){
+    const last=dt[dt.length-1];
+    main=`<div class="card lesson done"><div class="lesson-h"><span class="lv lv-${last.lv}">${LV[last.lv].name}</span><span class="muted">Bài ${last.n}</span></div>
+      <h2>Con đã học xong bài hôm nay! 🎉</h2>${wordChips(last.w)}
+      <div class="row"><button class="btn ghost small" id="again">Học lại bài này</button>${nx?`<button class="btn ghost small" id="goNext">Học trước bài ${nx.n}</button>`:''}</div></div>`;
+  } else if(nx){
+    main=`<div class="card lesson"><div class="lesson-h"><span class="lv lv-${nx.lv}">${LV[nx.lv].name}</span><span class="muted">Bài ${nx.n} / ${COURSE.filter(c=>c.lv===nx.lv).length}</span></div>
+      <h2>5 từ của hôm nay</h2>${wordChips(nx.w)}
+      <ol class="parts">${PARTS.map((p,i)=>`<li${i===3&&!withReading(nx).t&&!SAMPLE?' hidden':''}><span>${p[0]}</span>${p[1]}</li>`).join('')}</ol>
+      <button class="btn big" id="goNext">Bắt đầu học</button></div>`;
+  } else {
+    main=`<div class="card lesson"><h2>Con đã học hết ${total} bài! 🏆</h2><p class="muted" style="margin:0">Vào Tiến bộ → Cài đặt để chọn cấp độ tiếp theo.</p></div>`;
+  }
+  V().innerHTML=`
+  <div class="hello"><h1>Chào Ron! 👋</h1><p>${esc(dstr)} · Đã học ${doneN}/${total} bài</p></div>
+  ${main}
+  ${due.length?`<div class="card mission"><div class="ico">🔁</div><div class="txt"><h2>Ôn từ cũ</h2><p>${Math.min(due.length,10)} từ cần ôn lại hôm nay</p></div><button class="btn ghost" id="goRev">Ôn tập</button></div>`:''}
+  <div class="card"><div class="sec-h"><h2>7 ngày qua</h2><span class="muted">🔥 ${$('#streak').textContent} ngày liên tiếp</span></div><div class="week">${week}</div></div>
+  <div class="stats"><div class="stat"><b>${learned}</b><span>Từ đã học</span></div><div class="stat"><b>${mastered}</b><span>Đã thuộc</span></div><div class="stat"><b>${S.stars}</b><span>Ngôi sao</span></div></div>
+  ${HAS_TTS?'':'<div class="note">Trình duyệt này không đọc được tiếng Anh nên phần Luyện nghe sẽ bị bỏ qua. Hãy mở bằng Chrome hoặc Edge.</div>'}`;
+  const g=$('#goNext'); if(g) g.onclick=()=>startLesson(nx);
+  const a=$('#again'); if(a) a.onclick=()=>startLesson(dt[dt.length-1]);
+  const r=$('#goRev'); if(r) r.onclick=()=>runPractice(due.slice(0,10),{title:'Ôn từ cũ'});
+}
+
+// ---------- Topics ----------
+function vTopics(){
+  V().innerHTML=`<div class="sec-h"><h1 style="font-size:1.8rem">Chủ đề</h1><span class="muted">${TOPICS.length} chủ đề · ${TOTAL} từ</span></div>
+  <div class="topics">${TOPICS.map(t=>{const ks=[...new Set(LVS.flatMap(L=>t.lv[L]||[]))];const m=ks.filter(k=>box(k)>=1).length;return `<button class="topic" data-id="${t.id}"><span class="e">${t.icon}</span><b>${esc(t.vi)}</b><small>${esc(t.en)} · ${ks.length} từ</small><div class="bar"><i style="width:${Math.round(m/ks.length*100)}%"></i></div></button>`}).join('')}</div>`;
+  V().querySelectorAll('.topic').forEach(b=>b.onclick=()=>go('topic',{id:b.dataset.id}));
+}
+function vTopic(arg){
+  const t=TOPICS.find(x=>x.id===arg.id); const avail=LVS.filter(L=>t.lv[L]);
+  const L=arg.L&&t.lv[arg.L]?arg.L:(avail.find(x=>S.levels.includes(x))||avail[0]);
+  const ks=t.lv[L];
+  V().innerHTML=`<button class="back" id="bk">← Chủ đề</button>
+  <div class="sec-h"><h1 style="font-size:1.8rem">${t.icon} ${esc(t.vi)}</h1></div>
+  <div class="chips">${avail.map(x=>`<button class="chip" data-l="${x}" aria-pressed="${x===L}">${LV[x].name} · ${t.lv[x].length}</button>`).join('')}</div>
+  <div class="row"><button class="btn" id="prac">🎯 Luyện 5 từ</button><span class="muted" style="font-size:.9rem">● vàng: đang học · ● xanh: đã thuộc</span></div>
+  <div class="card wlist" style="gap:0;padding:6px 14px">${ks.map(k=>{const w=WORDS.get(k);return `<div class="wrow"><span class="e">${w.em||'🔤'}</span><div class="w"><b>${esc(w.w)}</b><div>${esc(w.vi)}</div></div><span class="dot ${status(k)}"></span><button class="spk" data-k="${esc(k)}" aria-label="Nghe">🔊</button></div>`}).join('')}</div>`;
+  $('#bk').onclick=()=>go('topics');
+  V().querySelectorAll('.chip').forEach(c=>c.onclick=()=>go('topic',{id:t.id,L:c.dataset.l}));
+  V().querySelectorAll('.spk').forEach(b=>b.onclick=()=>say(speakText(WORDS.get(b.dataset.k).w)));
+  $('#prac').onclick=()=>{ const unseen=ks.filter(k=>!S.srs[k]); const seen=shuffle(ks.filter(k=>S.srs[k])); runPractice([...unseen,...seen].slice(0,5),{title:t.vi,back:()=>go('topic',{id:t.id,L})}) };
+}
+
+// ---------- Lesson engine ----------
+function distractors(key,n,field,pool){
+  const w=WORDS.get(key); const t=TOPICS.find(x=>x.id===w.topic);
+  const same=[...new Set(LVS.flatMap(L=>t.lv[L]||[]))].filter(k=>k!==key);
+  const all=ORDER[w.lv].filter(k=>k!==key);
+  const out=[];const seenVal=new Set([field(w)]);
+  for(const k of [...(pool?shuffle(pool.filter(k=>k!==key)):[]),...shuffle(same),...shuffle(all)]){const v=field(WORDS.get(k));if(seenVal.has(v))continue;seenVal.add(v);out.push(k);if(out.length>=n)break}
+  return out;
+}
+function spread(arr){ for(let i=1;i<arr.length;i++) if(arr[i].key===arr[i-1].key){const j=arr.findIndex((e,x)=>x>i&&e.key!==arr[i].key);if(j>0)[arr[i],arr[j]]=[arr[j],arr[i]]} return arr }
+function sentencesOf(text){return text.replace(/\n+/g,' ').split(/(?<=[.!?]["”]?)\s+/).map(s=>s.trim()).filter(Boolean)}
+function findSentence(text,key){
+  const forms=WORDS.get(key).w.toLowerCase().split('/').map(f=>f.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  const re=new RegExp('\\b('+forms.join('|')+')(s|es)?\\b','i');
+  return sentencesOf(text).filter(s=>re.test(s)&&s.split(' ').length<=14)[0]||null;
+}
+let L_STATE=null;
+function openStage(state){ L_STATE=Object.assign({pos:0,wrong:new Set(),stars:0,retried:new Set()},state); const st=$('#stage'); st.hidden=false; document.body.style.overflow='hidden'; step() }
+async function startLesson(les){
+  les=withReading(les);
+  if(!les.t&&SAMPLE){ // Movers/Flyers: ask Claude to write the reading once, then keep it
+    openStage({queue:[{t:'loading'}],les,opts:{}});
+    const g=await genLessonReading(les).catch(()=>null);
+    if(g){ S.gen[les.id]=g; save(); les=Object.assign({},les,g) }
+  }
+  const ws=les.w; const q=[{t:'intro'}];
+  q.push({t:'section',i:0}); ws.forEach(k=>q.push({t:'card',key:k}));
+  q.push({t:'section',i:1});
+  let voc=ws.map(k=>({t:pick(['meaning','reverse']),key:k,pool:ws}));
+  voc=voc.concat(shuffle(ws.filter(k=>spellOf(WORDS.get(k).w))).slice(0,3).map(k=>({t:'spell',key:k})));
+  q.push(...spread(shuffle(voc)));
+  if(HAS_TTS){
+    q.push({t:'section',i:2});
+    let lis=ws.map(k=>({t:'listen',key:k,pool:ws}));
+    if(les.t) lis=lis.concat(shuffle(ws).map(k=>({t:'sent',key:k,sent:findSentence(les.t,k)})).filter(x=>x.sent).slice(0,3));
+    q.push(...spread(shuffle(lis)));
+  }
+  if(les.t){ q.push({t:'section',i:3}); q.push({t:'reading'}) }
+  openStage({queue:q,les,items:ws.map(k=>({key:k})),opts:{lesson:true}});
+}
+function runPractice(keys,opts){
+  if(!keys.length) return;
+  const q=[]; keys.filter(k=>!S.srs[k]).forEach(k=>q.push({t:'card',key:k}));
+  const types=k=>{const a=['meaning','reverse'];if(HAS_TTS)a.push('listen');if(spellOf(WORDS.get(k).w))a.push('spell');return a};
+  q.push(...spread(shuffle(keys.map(k=>({t:pick(types(k)),key:k,pool:keys})))));
+  openStage({queue:q,items:keys.map(k=>({key:k})),opts:opts||{}});
+}
+function closeStage(){ stopGame(); $('#stage').hidden=true; document.body.style.overflow=''; if(HAS_TTS) speechSynthesis.cancel() }
+function leave(){ const L=L_STATE; closeStage(); if(L.opts.back) L.opts.back(); else go(TAB==='topic'?'topics':TAB==='passage'?'read':TAB) }
+function stageShell(inner){
+  const L=L_STATE; const pct=Math.round(L.pos/L.queue.length*100);
+  $('#stage').innerHTML=`<div class="wrap stage-top"><button class="x" id="sx" aria-label="Thoát">✕</button><div class="prog"><i style="width:${pct}%"></i></div><span class="pill">⭐ ${L.stars}</span></div>
+  <div class="stage-body"><div class="wrap">${inner}</div></div><div id="fb"></div>`;
+  $('#sx').onclick=leave;
+}
+function step(){
+  const L=L_STATE; if(L.pos>=L.queue.length) return finish();
+  const it=L.queue[L.pos]; const w=it.key?WORDS.get(it.key):null;
+  ({loading:sLoading,intro:sIntro,section:sSection,card:sCard,listen:sListen,meaning:sMeaning,reverse:sReverse,spell:sSpell,sent:sSent,reading:sReading})[it.t](w,it);
+}
+function next(){L_STATE.pos++;step()}
+function bar(html,cls,btn,fn){ $('#fb').innerHTML=`<div class="feedback ${cls||''}"><div class="wrap"><div class="msg">${html}</div><button class="btn ${cls==='ok'?'good':''}" id="nx">${btn}</button></div></div>`; $('#nx').onclick=fn; $('#nx').focus() }
+function feedback(ok,w,it,extra){
+  const L=L_STATE;
+  if(ok){ L.stars++; tone(true) } else { tone(false); L.wrong.add(w.key);
+    if(!L.retried.has(it.key+it.t)){ L.retried.add(it.key+it.t); // try again later in the same part
+      let j=L.queue.findIndex((s,x)=>x>L.pos&&(s.t==='section'||s.t==='reading')); if(j<0) j=L.queue.length;
+      L.queue.splice(j,0,Object.assign({},it,{t:it.t==='spell'?'reverse':it.t})) } }
+  const praise=pick(['Đúng rồi! 🎉','Giỏi quá! 🌟','Tuyệt vời! 👏','Chính xác! ✨']);
+  bar(ok?praise+(extra?`<div class="sub">${extra}</div>`:''):`Đáp án: <b>${esc(w.w)}</b> = ${esc(w.vi)}${extra?`<div class="sub">${extra}</div>`:''}`,ok?'ok':'no','Tiếp →',next);
+  if(it.t!=='sent') say(speakText(w.w));
+}
+function sLoading(){ stageShell(`<div class="card finish" style="flex:1"><div class="trophy">✍️</div><h2>Đang chuẩn bị bài đọc…</h2><p class="muted" style="margin:0">Claude đang viết đoạn văn có 5 từ hôm nay.</p></div>`) }
+function sIntro(){
+  const L=L_STATE, les=L.les, hasRead=!!les.t;
+  stageShell(`<div class="card flash pop"><span class="tag"><span class="lv lv-${les.lv}">${LV[les.lv].name}</span> · Bài ${les.n}</span><h2 style="font-size:1.8rem">5 từ hôm nay</h2>${wordChips(les.w)}</div>
+  <ol class="parts big">${PARTS.map((p,i)=>(i===2&&!HAS_TTS)||(i===3&&!hasRead)?'':`<li><span>${p[0]}</span><div><b>${p[1]}</b><small>${p[2]}</small></div></li>`).join('')}</ol>`);
+  bar('Sẵn sàng chưa?','','Bắt đầu →',next);
+}
+function sSection(w,it){
+  const p=PARTS[it.i];
+  stageShell(`<div class="card finish pop" style="flex:1"><div class="trophy">${p[0]}</div><span class="tag">Phần ${PARTS.slice(0,it.i+1).filter((_,i)=>!(i===2&&!HAS_TTS)).length}</span><h2 style="font-size:2rem">${p[1]}</h2><p class="muted" style="margin:0;font-size:1.05rem">${p[2]}</p></div>`);
+  bar('','','Bắt đầu →',next);
+}
+function sCard(w){
+  stageShell(`<div class="prompt">Từ mới!</div>
+  <div class="card flash pop"><span class="tag"><span class="lv lv-${w.lv}">${LV[w.lv].name}</span></span><div class="big">${w.em||'🔤'}</div><div class="word">${esc(w.w)}</div><div class="vi">${esc(w.vi)}</div></div>
+  <button class="hear" id="hr" aria-label="Nghe lại">🔊</button>`);
+  $('#hr').onclick=()=>say(speakText(w.w)); setTimeout(()=>say(speakText(w.w)),250);
+  bar('<span class="muted">Nghe và đọc to theo nhé!</span>','','Đã nhớ →',next);
+}
+function choiceStep(w,it,promptHtml,optKeys,render,onPlay,extra){
+  stageShell(`${promptHtml}<div class="choices">${optKeys.map(k=>`<button class="choice" data-k="${esc(k)}">${render(WORDS.get(k))}</button>`).join('')}</div>`);
+  const play=onPlay||(()=>say(speakText(w.w)));
+  if(onPlay!==undefined||it.t==='listen') setTimeout(play,250);
+  const hr=$('#hr'); if(hr) hr.onclick=play;
+  const bs=[...$('#stage').querySelectorAll('.choice')];
+  bs.forEach(b=>b.onclick=()=>{ bs.forEach(x=>x.disabled=true); const ok=b.dataset.k===w.key; b.classList.add(ok?'ok':'no'); if(!ok) bs.find(x=>x.dataset.k===w.key).classList.add('ok'); feedback(ok,w,it,extra) });
+}
+function sListen(w,it){
+  const opts=shuffle([w.key,...distractors(w.key,3,x=>x.vi,it.pool)]);
+  choiceStep(w,it,`<div class="prompt">Nghe và chọn hình đúng</div><button class="hear" id="hr" aria-label="Nghe">🔊</button>`,opts,x=>`${x.em?`<span class="ce">${x.em}</span>`:''}<span class="${x.em?'cv':''}">${esc(x.vi)}</span>`);
+}
+function sSent(w,it){
+  const low=it.sent.toLowerCase(); const inSent=k=>WORDS.get(k).w.toLowerCase().split('/').some(f=>new RegExp('\\b'+f.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(s|es)?\\b').test(low));
+  const opts=shuffle([w.key,...distractors(w.key,10,x=>x.w.toLowerCase()).filter(k=>!inSent(k)).slice(0,3)]);
+  const play=()=>say(it.sent,S.rate*0.9);
+  choiceStep(w,it,`<div class="prompt">Nghe câu. Con nghe thấy từ nào?</div><button class="hear" id="hr" aria-label="Nghe câu">🔊</button><p class="muted" style="text-align:center;margin:0">Bấm loa để nghe lại</p>`,opts,x=>`${x.em?`<span class="ce">${x.em}</span>`:''}<span>${esc(x.w)}</span>`,play,`“${esc(it.sent)}”`);
+}
+function sMeaning(w,it){
+  const opts=shuffle([w.key,...distractors(w.key,3,x=>x.vi,it.pool)]);
+  choiceStep(w,it,`<div class="prompt">Từ này nghĩa là gì?</div><div class="card flash" style="padding:18px"><div class="word">${esc(w.w)}</div><button class="spk" id="hr" style="margin:0 auto" aria-label="Nghe">🔊</button></div>`,opts,x=>`<span>${esc(x.vi)}</span>`);
+}
+function sReverse(w,it){
+  const opts=shuffle([w.key,...distractors(w.key,3,x=>x.w.toLowerCase(),it.pool)]);
+  choiceStep(w,it,`<div class="prompt">Chọn từ tiếng Anh đúng</div><div class="card flash" style="padding:18px">${w.em?`<div class="big" style="font-size:3.6rem">${w.em}</div>`:''}<div class="vi" style="color:var(--ink);font-size:1.5rem">${esc(w.vi)}</div></div>`,opts,x=>`<span>${esc(x.w)}</span>`);
+}
+function sSpell(w,it){
+  const target=spellOf(w.w); const abc='abcdefghijklmnopqrstuvwxyz';
+  const letters=shuffle([...target,...Array.from({length:target.length>7?1:2},()=>pick(abc))]);
+  let typed=[];
+  stageShell(`<div class="prompt">Xếp chữ thành từ</div>
+  <div class="card flash" style="padding:16px">${w.em?`<div class="big" style="font-size:3.4rem">${w.em}</div>`:''}<div class="vi" style="color:var(--ink)">${esc(w.vi)}</div>${HAS_TTS?'<button class="spk" id="hr" style="margin:4px auto 0" aria-label="Nghe">🔊</button>':''}</div>
+  <div class="slots" id="slots">${[...target].map(()=>'<span class="slot"></span>').join('')}</div>
+  <div class="tiles" id="tiles">${letters.map((c,i)=>`<button class="tile" data-i="${i}">${c}</button>`).join('')}</div>
+  <div class="row" style="justify-content:center"><button class="btn ghost small" id="del">⌫ Xóa</button></div>`);
+  const hr=$('#hr'); if(hr) hr.onclick=()=>say(speakText(w.w));
+  const slots=[...$('#slots').children], tiles=[...$('#tiles').children];
+  const draw=()=>slots.forEach((s,i)=>s.textContent=typed[i]?typed[i].c:'');
+  const check=()=>{ const ok=typed.map(x=>x.c).join('')===target; tiles.forEach(t=>t.disabled=true); $('#del').disabled=true; slots.forEach((s,i)=>{s.classList.add(ok?'ok':'no'); if(!ok) s.textContent=target[i]}); feedback(ok,w,it) };
+  tiles.forEach(t=>t.onclick=()=>{ if(typed.length>=target.length) return; typed.push({c:t.textContent,i:+t.dataset.i}); t.disabled=true; draw(); if(typed.length===target.length) check() });
+  $('#del').onclick=()=>{ const x=typed.pop(); if(x) tiles[x.i].disabled=false; draw() };
+}
+function sReading(){
+  const L=L_STATE, les=L.les;
+  stageShell(`<div class="card"><h2 style="font-size:1.5rem">${esc(les.vi||'Đọc hiểu')}</h2>
+    <div class="row">${HAS_TTS?'<button class="btn ghost small" id="readAll">🔊 Nghe cả đoạn</button>':''}<span class="muted" style="font-size:.88rem">5 từ hôm nay được tô đậm. Chạm vào từ để xem nghĩa.</span></div>
+    <div class="passage">${markup(les.t,les.w)}</div></div>
+  <div class="card"><h2>Trả lời câu hỏi</h2>${les.q.map((q,i)=>`<div class="q" data-i="${i}"><b>${i+1}. ${esc(q[0])}</b><div class="opts">${q[1].map((o,j)=>`<button class="opt" data-j="${j}" aria-pressed="false">${esc(o)}</button>`).join('')}</div></div>`).join('')}</div>`);
+  $('#stage').querySelectorAll('.vw').forEach(s=>s.onclick=()=>showWord(s.dataset.k));
+  const ra=$('#readAll'); if(ra){ let on=false; ra.onclick=()=>{ if(on){speechSynthesis.cancel();on=false;ra.textContent='🔊 Nghe cả đoạn';return} on=true;ra.textContent='⏹ Dừng'; say(les.t.replace(/\n+/g,' '),S.rate*0.9,()=>{on=false;ra.textContent='🔊 Nghe cả đoạn'}) } }
+  const ans=new Array(les.q.length).fill(null); let checked=false;
+  $('#stage').querySelectorAll('.q').forEach(qd=>{ const i=+qd.dataset.i; qd.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{ if(checked) return; ans[i]=+o.dataset.j; qd.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===o)); $('#nx').disabled=ans.includes(null) }) });
+  bar('<span class="muted">Chọn đáp án cho mọi câu hỏi</span>','','Kiểm tra',()=>{
+    if(checked){ closeSheet(); next(); return }
+    checked=true; let sc=0;
+    $('#stage').querySelectorAll('.q').forEach(qd=>{ const i=+qd.dataset.i, c=les.q[i][2]; qd.querySelectorAll('.opt').forEach(o=>{const j=+o.dataset.j; if(j===c) o.classList.add('ok'); else if(j===ans[i]) o.classList.add('no')}); if(ans[i]===c) sc++ });
+    tone(sc>=les.q.length/2); L.stars+=sc; L.readScore=sc;
+    const fb=$('#fb .feedback'); fb.className='feedback '+(sc===les.q.length?'ok':sc?'':'no');
+    $('#fb .msg').innerHTML=`Đúng ${sc}/${les.q.length} câu ${sc===les.q.length?'🏆':sc>=les.q.length/2?'👍':'💪'}`;
+    $('#nx').textContent='Hoàn thành →';
+  });
+  $('#nx').disabled=true;
+}
+function finish(){
+  const L=L_STATE, t=today();
+  for(const it of (L.items||[])){ const k=it.key; const r=S.srs[k]||{b:0,due:t}; const ok=!L.wrong.has(k);
+    r.b=ok?Math.min(6,(r.b||0)+1):1; r.due=t+INT[r.b]; r.last=t; S.srs[k]=r }
+  S.stars+=L.stars;
+  if(L.opts.lesson){ const first=!S.done[L.les.id]; S.done[L.les.id]={day:first?t:S.done[L.les.id].day,stars:L.stars,read:L.readScore};
+    if(!S.lessonDays[t]){ S.streak=(S.lastLesson===t-1)?S.streak+1:(S.lastLesson===t?S.streak:1); S.lastLesson=t } S.lessonDays[t]=true }
+  save();
+  const items=L.items||[]; const okCount=items.filter(i=>!L.wrong.has(i.key)).length;
+  stageShell(`<div class="card finish pop" style="flex:1"><div class="trophy">${okCount===items.length?'🏆':'🎖️'}</div><h2 style="font-size:2rem">Hoàn thành!</h2>
+  <p style="font-size:1.15rem;margin:0">Con được <b>+${L.stars} ⭐</b></p><p class="muted" style="margin:0">Nhớ đúng ${okCount}/${items.length} từ ngay lần đầu</p>${L.opts.lesson?`<button class="btn big" id="playG" style="margin-top:8px">🎮 Chơi game thưởng</button>`:''}
+  ${L.wrong.size?`<p class="muted" style="margin:0">Cần ôn thêm: ${[...L.wrong].map(k=>`<b>${esc(WORDS.get(k).w)}</b>`).join(', ')}</p>`:''}</div>`);
+  $('.prog i').style.width='100%';
+  bar(L.opts.lesson?'Hẹn gặp lại ngày mai!':'Làm tốt lắm!','ok','Xong',leave);
+  const pg=$('#playG'); if(pg) pg.onclick=()=>{ TAB='today'; openGames(L.les.w,true) };
+}
+async function genLessonReading(les){
+  const words=les.w.map(k=>WORDS.get(k).w.split('/')[0]);
+  const g={M:'past simple, comparatives, must, going to; short sentences',F:'present perfect, past continuous, will, might'}[les.lv]||'present simple, can, have got';
+  const prompt=`Write a very short, cheerful reading passage (50-80 words, 2 short paragraphs) for a 9-year-old Vietnamese child in grade 4 learning English for the Cambridge ${LV[les.lv].full} exam (CEFR ${LV[les.lv].cefr}).
+It MUST use ALL of these 5 words: ${words.join(', ')}.
+Keep grammar at ${LV[les.lv].cefr} level (${g}). Other words should be easy words from the Cambridge Starters/Movers word lists.
+Then write 3 multiple-choice questions (3 options, or Yes/No) whose answers are clearly in the text.
+Reply with ONLY JSON: {"vi":"short Vietnamese title","text":"paragraph 1\\n\\nparagraph 2","qs":[{"q":"question","options":["a","b","c"],"answer":0}]}`;
+  const d=await SAMPLE.json(prompt,{cache:false});
+  if(!d||typeof d.text!=='string'||!Array.isArray(d.qs)) return null;
+  const q=d.qs.filter(x=>x&&x.q&&Array.isArray(x.options)&&x.options.length>=2).slice(0,4).map(x=>[String(x.q),x.options.map(String),Math.max(0,Math.min(x.options.length-1,Number(x.answer)||0))]);
+  return q.length?{t:d.text,q,vi:String(d.vi||'Đọc hiểu')}:null;
+}
+
+function todayReading(){
+  const pool=READINGS.map((r,i)=>({...r,id:'r'+i})).filter(r=>S.levels.includes(r.lv));
+  if(!pool.length) return null;
+  const t=today(); const notDone=pool.filter(r=>!(r.id in S.readDone));
+  const list=notDone.length?notDone:pool;
+  return list[t%list.length];
+}
+
+// ---------- Reading ----------
+const STOP=new Set(['in','on','here','there','after','before','end','go','fine','every','past','over','way','right','left','front','time','day','fall','back','cut','matter','fly','play','old','young','live','eat','drink','may','wear','second','first','one','two','three','past','later','fair','thin','fat','ring','spot','step','fish','watch','run','swim','walk','read','ride','sing','draw','kick','jump','catch','throw','listen','enjoy','meet','join','collect','taste','smell','sleep','dream','wash','cook','work','text','score','skip','hop','skate','sail','dance','cry','cough','brush','swing','drive']);
+let FORMS=null;
+function buildForms(){ FORMS=new Map(); for(const w of WORDS.values()){ for(const f of w.w.toLowerCase().split('/')){ if(!FORMS.has(f)) FORMS.set(f,w.key) } } }
+function lookup(tok){ const t=tok.toLowerCase(); if(STOP.has(t)) return null; const tries=[t,t.replace(/'s$/,''),t.replace(/s$/,''),t.replace(/es$/,''),t.replace(/ies$/,'y'),t.replace(/ves$/,'f'),t.replace(/ves$/,'fe')]; for(const x of tries){ if(x.length>1&&FORMS.has(x)&&!STOP.has(x)) return FORMS.get(x) } return null }
+function markup(text,hk){
+  const H=new Set(hk||[]); const span=(k,txt)=>`<span class="vw${H.has(k)?' hl':''}" data-k="${esc(k)}">${esc(txt)}</span>`;
+  if(!FORMS) buildForms();
+  return text.split(/\n\s*\n/).map(par=>{
+    const toks=par.split(/(\s+)/); let out='';
+    for(let i=0;i<toks.length;i++){
+      const tk=toks[i]; if(/^\s+$/.test(tk)||!tk){out+=tk;continue}
+      // try 3- and 2-word phrases
+      let done=false;
+      for(const n of [3,2]){ const parts=[];let j=i,cnt=0;while(j<toks.length&&cnt<n){if(!/^\s+$/.test(toks[j])){parts.push(toks[j]);cnt++}j++}
+        if(cnt<n) continue; const raw=parts.join(' '); const m=raw.match(/^([^A-Za-z]*)([A-Za-z][A-Za-z' -]*[A-Za-z])([^A-Za-z]*)$/); if(!m) continue;
+        const key=FORMS.get(m[2].toLowerCase())||FORMS.get(m[2].toLowerCase().replace(/s$/,''));
+        if(key&&m[2].includes(' ')){ out+=esc(m[1])+span(key,m[2])+esc(m[3]); i=j-1; done=true; break }
+      }
+      if(done) continue;
+      const m=tk.match(/^([^A-Za-z]*)([A-Za-z][A-Za-z'.-]*[A-Za-z]|[A-Za-z])([^A-Za-z]*)$/);
+      if(m){ const key=lookup(m[2].replace(/[.]$/,'')); let k2=key; if(!k2&&H.size){const lw=m[2].toLowerCase();for(const h of H){const fs=WORDS.get(h).w.toLowerCase().split('/');if(fs.some(f=>lw===f||lw===f+'s'||lw===f+'es'||lw===f.replace(/y$/,'ies'))){k2=h;break}}}
+        out+= k2? esc(m[1])+span(k2,m[2])+esc(m[3]) : esc(tk) } else out+=esc(tk);
+    }
+    return `<p>${out}</p>`;
+  }).join('');
+}
+function allReadings(){ const les=COURSE.filter(c=>S.done[c.id]).map(c=>withReading(c)).filter(c=>c.t).map(c=>({id:'L'+c.id,lv:c.lv,title:`Bài ${c.n}: ${c.vi}`,vi:'Từ: '+c.w.map(k=>WORDS.get(k).w).join(', '),text:c.t,qs:c.q,hk:c.w})); return [...les.reverse(),...READINGS.map((r,i)=>({...r,id:'r'+i})),...S.ai] }
+let RLV=null;
+function vRead(){
+  if(!RLV||!S.levels.includes(RLV)) RLV=S.levels[0];
+  const list=allReadings().filter(r=>r.lv===RLV);
+  const tr=todayReading();
+  V().innerHTML=`<div class="sec-h"><h1 style="font-size:1.8rem">Bài đọc</h1><span class="muted">${list.length} bài</span></div>
+  <div class="chips">${S.levels.map(L=>`<button class="chip" data-l="${L}" aria-pressed="${L===RLV}">${LV[L].name}</button>`).join('')}</div>
+  <div class="card" id="aiBox" hidden><div class="sec-h"><h2>✨ Bài đọc mới mỗi ngày</h2></div>
+    <p class="muted" style="margin:0">Claude viết một bài đọc mới cấp ${LV[RLV].name}, dùng các từ con đang học.</p>
+    <div class="row"><button class="btn" id="aiGo">Tạo bài đọc mới</button><button class="btn ghost small" id="aiStop" hidden>Dừng</button></div><div id="aiMsg" class="muted"></div></div>
+  <div class="rlist">${list.map(r=>{const sc=S.readDone[r.id];return `<button class="ritem" data-id="${esc(r.id)}"><span style="font-size:1.8rem">${r.id.startsWith('ai')?'✨':r.id.startsWith('L')?'🧠':tr&&tr.id===r.id?'📌':'📄'}</span><span class="t"><b>${esc(r.title)}</b><small>${esc(r.vi||'')}${tr&&tr.id===r.id?' · Bài của hôm nay':''}</small></span>${sc!=null?`<span class="score">${sc}/${r.qs.length}</span>`:''}</button>`}).join('')}</div>`;
+  V().querySelectorAll('.chip').forEach(c=>c.onclick=()=>{RLV=c.dataset.l;vRead()});
+  V().querySelectorAll('.ritem').forEach(b=>b.onclick=()=>go('passage',b.dataset.id));
+  setupAI();
+}
+function vPassage(id){
+  const r=allReadings().find(x=>x.id===id); if(!r){go('read');return}
+  const prev=S.readDone[id];
+  V().innerHTML=`<button class="back" id="bk">← Bài đọc</button>
+  <div class="card"><div class="row"><span class="lv lv-${r.lv}">${LV[r.lv].name}</span>${prev!=null?`<span class="score">Lần trước: ${prev}/${r.qs.length}</span>`:''}</div>
+    <h1 style="font-size:1.9rem">${esc(r.title)}</h1>${r.vi?`<p class="muted" style="margin:-6px 0 0">${esc(r.vi)}</p>`:''}
+    <div class="row">${HAS_TTS?'<button class="btn ghost small" id="readAll">🔊 Nghe cả bài</button>':''}<span class="muted" style="font-size:.9rem">Chạm vào từ được tô để xem nghĩa</span></div>
+    <div class="passage">${markup(r.text,r.hk)}</div></div>
+  <div class="card"><h2>Trả lời câu hỏi</h2>${r.qs.map((q,i)=>`<div class="q" data-i="${i}"><b>${i+1}. ${esc(q[0])}</b><div class="opts">${q[1].map((o,j)=>`<button class="opt" data-j="${j}" aria-pressed="false">${esc(o)}</button>`).join('')}</div></div>`).join('')}
+  <div class="row"><button class="btn" id="chk" disabled>Kiểm tra</button><span id="res" class="score"></span></div></div>`;
+  $('#bk').onclick=()=>go('read');
+  V().querySelectorAll('.vw').forEach(s=>s.onclick=()=>showWord(s.dataset.k));
+  const ra=$('#readAll'); if(ra){ let on=false; ra.onclick=()=>{ if(on){speechSynthesis.cancel();on=false;ra.textContent='🔊 Nghe cả bài';return} on=true;ra.textContent='⏹ Dừng đọc'; say(r.text.replace(/\n+/g,' '),S.rate*0.95,()=>{on=false;ra.textContent='🔊 Nghe cả bài'}) } }
+  const ans=new Array(r.qs.length).fill(null); let checked=false;
+  V().querySelectorAll('.q').forEach(qd=>{ const i=+qd.dataset.i; qd.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{ if(checked) return; ans[i]=+o.dataset.j; qd.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===o)); $('#chk').disabled=ans.includes(null) }) });
+  $('#chk').onclick=()=>{
+    if(checked){ go('passage',id); return }
+    checked=true; let sc=0;
+    V().querySelectorAll('.q').forEach(qd=>{ const i=+qd.dataset.i, c=r.qs[i][2]; qd.querySelectorAll('.opt').forEach(o=>{const j=+o.dataset.j; if(j===c) o.classList.add('ok'); else if(j===ans[i]) o.classList.add('no')}); if(ans[i]===c) sc++ });
+    tone(sc>=r.qs.length/2);
+    const first=S.readDone[id]==null; S.readDone[id]=sc; S.readDone[id+'_day']=today(); if(first) S.stars+=sc*2; save();
+    $('#res').textContent=`${sc}/${r.qs.length} câu đúng ${sc===r.qs.length?'🏆':sc>=r.qs.length/2?'👍':'💪'}${first?` · +${sc*2} ⭐`:''}`;
+    $('#chk').textContent='Làm lại';
+  };
+}
+function showWord(k){
+  const w=WORDS.get(k); if(!w) return; say(speakText(w.w));
+  const sh=$('#sheet'); sh.hidden=false;
+  sh.innerHTML=`<div class="wrap"><span class="e">${w.em||'🔤'}</span><div class="t"><b>${esc(w.w)}</b><span class="muted">${esc(w.vi)} · <span class="lv lv-${w.lv}">${LV[w.lv].name}</span></span></div><button class="spk" id="shs" aria-label="Nghe">🔊</button><button class="x" id="shx" aria-label="Đóng">✕</button></div>`;
+  $('#shs').onclick=()=>say(speakText(w.w)); $('#shx').onclick=closeSheet;
+}
+function closeSheet(){ $('#sheet').hidden=true }
+document.addEventListener('click',e=>{ if($('#sheet').hidden) return; if(e.target.closest('#sheet')||e.target.closest('.vw')) return; closeSheet() },true);
+
+// ---------- AI reading (Claude sample capability, when available) ----------
+let SAMPLE=null, aiCtl=null;
+if(window.claude&&window.claude.use){ window.claude.use('sample').then(s=>{SAMPLE=s; if(TAB==='read') setupAI(); if(TAB==='today'&&$('#stage').hidden) vToday()}).catch(()=>{}) }
+function setupAI(){
+  const box=$('#aiBox'); if(!box||!SAMPLE) return; box.hidden=false;
+  $('#aiGo').onclick=genReading; $('#aiStop').onclick=()=>aiCtl&&aiCtl.abort();
+}
+async function genReading(){
+  const L=RLV; const lvKeys=ORDER[L];
+  let target=lvKeys.filter(k=>{const b=box(k);return b>=1&&b<=3});
+  target=shuffle(target).slice(0,10); if(target.length<8) target=[...target,...shuffle(lvKeys.filter(k=>!target.includes(k))).slice(0,10-target.length)];
+  const words=target.map(k=>WORDS.get(k).w.split('/')[0]);
+  const spec={S:{len:'70-100',q:4,grammar:'present simple, present continuous, can, have got; very short sentences',kind:'Yes/No or 3 options'},M:{len:'110-150',q:5,grammar:'past simple, comparatives, must, going to; short sentences',kind:'3 options or True/False'},F:{len:'150-200',q:5,grammar:'present perfect, past continuous, will, might, relative clauses',kind:'3 options or True/False'}}[L];
+  const names='Alex, Anna, Ben, Grace, Hugo, Kim, Lucy, Sam, Tom, Daisy, Fred, Jack, Lily, Mary, Paul, Zoe, Emma, George, Harry, Holly, Katy, Oliver, Sophia, William, Ron';
+  const prompt=`Write a fun, original reading passage for a 9-year-old Vietnamese boy named Ron who is learning English for the Cambridge ${LV[L].full} exam (CEFR ${LV[L].cefr}).
+Rules:
+- Length: ${spec.len} words, split into 2-4 short paragraphs.
+- Grammar must stay at ${LV[L].cefr} level: ${spec.grammar}.
+- Use as many of these target words as naturally possible: ${words.join(', ')}.
+- Other words should be common words from the Cambridge ${LV[L].name} word list. Characters can use names like: ${names}.
+- Topic should be cheerful and interesting for a child (animals, adventures, school, family, sports, space, dinosaurs...).
+- Then write ${spec.q} reading comprehension questions (${spec.kind}). The answer must be clearly found in the text.
+Reply with ONLY a JSON object in this exact shape:
+{"title":"English title","vi":"Vietnamese translation of the title","text":"paragraph 1\\n\\nparagraph 2","qs":[{"q":"question","options":["option A","option B","option C"],"answer":0}]}
+"answer" is the 0-based index of the correct option.`;
+  const msg=$('#aiMsg'), go1=$('#aiGo'), stop=$('#aiStop');
+  go1.disabled=true; stop.hidden=false; msg.textContent='Claude đang viết bài… (có thể mất khoảng 30 giây)';
+  aiCtl=new AbortController();
+  try{
+    const d=await SAMPLE.json(prompt,{signal:aiCtl.signal,cache:false});
+    if(!d||typeof d.text!=='string'||!Array.isArray(d.qs)||!d.qs.length) throw {code:'invalid_json'};
+    const qs=d.qs.filter(q=>q&&q.q&&Array.isArray(q.options)&&q.options.length>=2).map(q=>[String(q.q),q.options.map(String),Math.max(0,Math.min(q.options.length-1,Number(q.answer)||0))]);
+    const r={id:'ai'+Date.now(),lv:L,title:String(d.title||'New story'),vi:String(d.vi||''),text:d.text,qs};
+    S.ai.unshift(r); if(S.ai.length>60) S.ai.length=60; save();
+    go('passage',r.id);
+  }catch(e){
+    const c=e&&e.code; go1.disabled=false; stop.hidden=true;
+    if(c==='cancelled') msg.textContent='';
+    else if(c==='not_granted'||c==='sampling_disabled'||c==='not_declared'||c==='capability_disabled'){ $('#aiBox').hidden=true; SAMPLE=null }
+    else if(c==='rate_limited') msg.textContent='Đã tạo nhiều bài quá, thử lại sau ít phút nhé.';
+    else msg.textContent='Chưa tạo được bài. Bấm thử lại nhé.';
+  }
+}
+
+// ---------- Mini games ----------
+const GAMES=[
+  {id:'balloon',icon:'🎈',name:'Bắn bóng bay',desc:'Nghe từ, chạm vào bóng bay đúng trước khi nó bay mất',fn:gBalloon},
+  {id:'memory',icon:'🃏',name:'Lật thẻ ghép đôi',desc:'Tìm cặp thẻ: hình và từ tiếng Anh',fn:gMemory},
+  {id:'detective',icon:'🕵️',name:'Thám tử chữ cái',desc:'Đoán từng chữ cái để tìm ra từ bí mật',fn:gDetective}
+];
+let GAME_RAF=0, G_CTX=null;
+function stopGame(){ if(GAME_RAF) cancelAnimationFrame(GAME_RAF); GAME_RAF=0 }
+function gameWords(src){
+  if(Array.isArray(src)) return src;
+  const dt=doneToday(), nx=nextLesson();
+  const todayKeys=dt.length?dt[dt.length-1].w:(nx?nx.w:ORDER.S.slice(0,5));
+  if(src==='learned'){ const l=shuffle(Object.keys(S.srs).filter(k=>WORDS.has(k)&&box(k)>=1)); return l.length>=5?l.slice(0,6):todayKeys }
+  return todayKeys;
+}
+function gameShell(title,inner){
+  stopGame();
+  $('#stage').innerHTML=`<div class="wrap stage-top"><button class="x" id="sx" aria-label="Thoát">✕</button><div class="gtitle">${title}</div><span class="pill">⭐ ${S.stars}</span></div>
+  <div class="stage-body"><div class="wrap">${inner}</div></div><div id="fb"></div>`;
+  $('#sx').onclick=()=>{ stopGame(); if(G_CTX.fromLesson) openGames(G_CTX.keys,true); else { closeStage(); go('games') } };
+}
+function openGames(keys,fromLesson){
+  G_CTX={keys,fromLesson};
+  const st=$('#stage'); st.hidden=false; document.body.style.overflow='hidden';
+  stopGame();
+  $('#stage').innerHTML=`<div class="wrap stage-top"><button class="x" id="sx" aria-label="Thoát">✕</button><div class="gtitle">🎮 Game thưởng</div><span class="pill">⭐ ${S.stars}</span></div>
+  <div class="stage-body"><div class="wrap"><p class="muted" style="margin:0;text-align:center">Chơi với các từ:</p>${wordChips(keys)}
+  <div class="gcards">${GAMES.map(g=>`<button class="gcard" data-g="${g.id}"><span class="gi">${g.icon}</span><span><b>${g.name}</b><small>${g.desc}</small></span></button>`).join('')}</div></div></div><div id="fb"></div>`;
+  $('#sx').onclick=()=>{ closeStage(); go(fromLesson?'today':'games') };
+  $('#stage').querySelectorAll('.gcard').forEach(b=>b.onclick=()=>GAMES.find(g=>g.id===b.dataset.g).fn(keys));
+}
+function gameOver(icon,title,line,earned,replay){
+  if(earned){ S.stars+=earned; save() }
+  $('#stage .stage-body .wrap').innerHTML=`<div class="card finish pop" style="flex:1"><div class="trophy">${icon}</div><h2 style="font-size:2rem">${title}</h2><p style="margin:0;font-size:1.1rem">${line}</p>${earned?`<p style="margin:0;font-size:1.15rem">Con được <b>+${earned} ⭐</b></p>`:''}</div>`;
+  $('#fb').innerHTML=`<div class="feedback ok"><div class="wrap"><button class="btn ghost" id="gOther">Game khác</button><span style="flex:1"></span><button class="btn good" id="gAgain">Chơi lại</button></div></div>`;
+  $('#gAgain').onclick=replay; $('#gOther').onclick=()=>openGames(G_CTX.keys,G_CTX.fromLesson);
+}
+
+// 1) Balloon pop — listening
+function gBalloon(keys){
+  const GOAL=10; let score=0,hearts=3,target=null,balls=[],spawnT=.3,last=0,over=false,sinceTarget=0;
+  gameShell('🎈 Bắn bóng bay',`<div class="ghud"><span id="gh">❤️❤️❤️</span><button class="btn ghost small" id="gsay">🔊 Nghe lại</button><span class="pill" id="gs">0/${GOAL}</span></div>
+  <div class="gprompt" id="gp"></div><div class="arena" id="arena"></div>`);
+  const arena=$('#arena'), gp=$('#gp');
+  const colors=['--b1','--b2','--b3','--b4','--b5'];
+  const sayT=()=>{ const w=WORDS.get(target); if(HAS_TTS) say(speakText(w.w)) };
+  function newTarget(){ const prev=target; const pool=keys.filter(k=>k!==prev); target=pick(pool.length?pool:keys); sinceTarget=0;
+    const w=WORDS.get(target); gp.innerHTML=HAS_TTS?'Con nghe thấy từ gì? Chạm vào bóng bay đúng!':`Tìm bóng bay: <b>${esc(w.vi)}</b>`; sayT(); spawnT=Math.min(spawnT,.4) }
+  function spawn(){
+    const W=arena.clientWidth, H=arena.clientHeight; const k=(sinceTarget>=2||Math.random()<.4)?target:pick(keys); if(k===target) sinceTarget=0; else sinceTarget++;
+    const w=WORDS.get(k); const el=document.createElement('button'); el.className='balloon';
+    el.style.setProperty('--bc',`var(${pick(colors)})`); el.innerHTML=`<span class="be">${w.em||'❓'}</span><span class="bw">${esc(w.w)}</span>`;
+    const b={el,k,x:Math.random()*Math.max(0,W-96),y:H+10,v:(H/(6.5-Math.min(3,score*.25)))*(.85+Math.random()*.3),dx:(Math.random()-.5)*20,t:Math.random()*6};
+    el.onclick=()=>hit(b); arena.appendChild(el); balls.push(b); place(b);
+  }
+  const place=b=>{ b.el.style.transform=`translate(${b.x+Math.sin(b.t)*8}px,${b.y}px)` };
+  function hit(b){ if(over||b.dead) return;
+    if(b.k===target){ b.dead=true; b.el.classList.add('popped'); setTimeout(()=>b.el.remove(),300); tone(true); score++; $('#gs').textContent=`${score}/${GOAL}`;
+      if(score>=GOAL) return end(true); newTarget() }
+    else { tone(false); b.el.classList.add('shake'); setTimeout(()=>b.el.classList.remove('shake'),400); hearts--; $('#gh').textContent='❤️'.repeat(hearts)+'🤍'.repeat(3-hearts);
+      const w=WORDS.get(target); gp.innerHTML=`Chưa đúng! Từ cần tìm là <b>${esc(w.w)}</b> ${w.em}`; sayT(); if(hearts<=0) end(false) } }
+  function end(win){ over=true; stopGame(); gameOver(win?'🏆':'💪',win?'Con thắng rồi!':'Suýt nữa thôi!',`Bắn trúng ${score}/${GOAL} bóng bay`,win?5:Math.floor(score/2),()=>gBalloon(keys)) }
+  function loop(ts){ if(over) return; const dt=Math.min(.05,(ts-(last||ts))/1000); last=ts; spawnT-=dt;
+    if(spawnT<=0){ spawn(); spawnT=Math.max(.7,1.3-score*.05) }
+    for(const b of balls){ if(b.dead) continue; b.y-=b.v*dt; b.t+=dt*2; place(b); if(b.y<-130){ b.dead=true; b.el.remove() } }
+    balls=balls.filter(b=>!b.dead); GAME_RAF=requestAnimationFrame(loop) }
+  $('#gsay').onclick=sayT; if(!HAS_TTS) $('#gsay').hidden=true;
+  newTarget(); GAME_RAF=requestAnimationFrame(loop);
+}
+
+// 2) Memory match — picture/meaning ↔ English word
+function gMemory(keys){
+  const ks=shuffle(keys).slice(0,6); let cards=shuffle(ks.flatMap(k=>[{k,side:'pic'},{k,side:'word'}]));
+  let open=[],matched=0,moves=0,lock=false;
+  gameShell('🃏 Lật thẻ ghép đôi',`<div class="ghud"><span class="muted">Ghép hình với từ tiếng Anh</span><span class="pill" id="gm">0 lượt</span></div>
+  <div class="mem" style="--cols:${cards.length>10?4:5}">${cards.map((c,i)=>{const w=WORDS.get(c.k);return `<button class="mcard" data-i="${i}" aria-label="Thẻ ${i+1}"><span class="mback">?</span><span class="mface ${c.side}">${c.side==='pic'?`<span class="me">${w.em||''}</span><span class="mv">${esc(w.vi)}</span>`:`<span class="mw">${esc(w.w)}</span>`}</span></button>`}).join('')}</div>`);
+  const els=[...$('#stage').querySelectorAll('.mcard')];
+  els.forEach(el=>el.onclick=()=>{ const i=+el.dataset.i; if(lock||el.classList.contains('up')) return; el.classList.add('up'); open.push(i);
+    const c=cards[i]; if(c.side==='word') say(speakText(WORDS.get(c.k).w));
+    if(open.length===2){ moves++; $('#gm').textContent=`${moves} lượt`; const [a,b]=open; open=[];
+      if(cards[a].k===cards[b].k){ tone(true); [a,b].forEach(x=>els[x].classList.add('got')); matched++; if(matched===ks.length) setTimeout(()=>{ const st=moves<=ks.length+2?3:moves<=ks.length*2?2:1; gameOver('🃏'.repeat(1)+'⭐'.repeat(st),'Ghép xong hết!',`Con dùng ${moves} lượt`,st,()=>gMemory(keys)) },700) }
+      else { lock=true; setTimeout(()=>{ [a,b].forEach(x=>els[x].classList.remove('up')); lock=false },900) } } });
+}
+
+// 3) Letter detective — guess the word letter by letter (balloons as lives)
+function gDetective(keys){
+  const list=shuffle(keys.filter(k=>spellOf(WORDS.get(k).w))).slice(0,5);
+  if(!list.length){ gameShell('🕵️ Thám tử chữ cái','<p>Bộ từ này chưa có từ phù hợp. Chọn game khác nhé!</p>'); return }
+  let idx=0,solved=0;
+  function round(){
+    const k=list[idx], w=WORDS.get(k), target=spellOf(w.w); const got=new Set(); const MAXL=8; let lives=MAXL, done=false;
+    gameShell('🕵️ Thám tử chữ cái',`<div class="ghud"><span class="muted">Từ ${idx+1}/${list.length}</span><span class="lives" id="lv">${'🎈'.repeat(lives)}</span></div>
+      <div class="card flash" style="padding:14px">${w.em?`<div class="big" style="font-size:3.2rem">${w.em}</div>`:''}<div class="vi" style="color:var(--ink)">${esc(w.vi)}</div><div class="row" style="justify-content:center">${HAS_TTS?'<button class="btn ghost small" id="dsay">🔊 Nghe</button>':''}</div></div>
+      <div class="slots" id="ds">${[...target].map(()=>'<span class="slot"></span>').join('')}</div>
+      <div class="kb" id="kb">${[...'abcdefghijklmnopqrstuvwxyz'].map(c=>`<button class="key" data-c="${c}">${c}</button>`).join('')}</div>`);
+    const slots=[...$('#ds').children];
+    const show=()=>[...target].forEach((c,i)=>slots[i].textContent=got.has(c)?c:'');
+    $('#kb').querySelectorAll('.key').forEach(b=>b.onclick=()=>{ if(done) return; const c=b.dataset.c; b.disabled=true;
+      if(target.includes(c)){ got.add(c); b.classList.add('ok'); tone(true); show();
+        if([...target].every(x=>got.has(x))){ done=true; solved++; slots.forEach(s=>s.classList.add('ok')); say(speakText(w.w)); fin(true) } }
+      else { lives--; b.classList.add('no'); tone(false); $('#lv').textContent='🎈'.repeat(lives)+'💥'.repeat(MAXL-lives);
+        if(lives<=0){ done=true; [...target].forEach((c,i)=>{slots[i].textContent=c;slots[i].classList.add('no')}); say(speakText(w.w)); fin(false) } } });
+    const ds=$('#dsay'); if(ds) ds.onclick=()=>say(speakText(w.w));
+    function fin(ok){ $('#fb').innerHTML=`<div class="feedback ${ok?'ok':'no'}"><div class="wrap"><div class="msg">${ok?'Con tìm ra rồi! 🎉':'Từ bí mật là'} <b>${esc(w.w)}</b></div><button class="btn ${ok?'good':''}" id="nx">${idx+1<list.length?'Từ tiếp →':'Xem kết quả'}</button></div></div>`;
+      $('#nx').onclick=()=>{ idx++; if(idx<list.length) round(); else gameOver(solved===list.length?'🏆':'🕵️','Hết từ rồi!',`Con tìm ra ${solved}/${list.length} từ`,solved,()=>gDetective(keys)) } }
+  }
+  round();
+}
+function vGames(src){
+  src=src||'today'; const keys=gameWords(src);
+  V().innerHTML=`<div class="sec-h"><h1 style="font-size:1.8rem">Game</h1></div>
+  <div class="chips"><button class="chip" data-s="today" aria-pressed="${src==='today'}">Từ của bài hôm nay</button><button class="chip" data-s="learned" aria-pressed="${src==='learned'}">Từ đã học (ngẫu nhiên)</button></div>
+  ${wordChips(keys)}
+  <div class="gcards">${GAMES.map(g=>`<button class="gcard" data-g="${g.id}"><span class="gi">${g.icon}</span><span><b>${g.name}</b><small>${g.desc}</small></span></button>`).join('')}</div>`;
+  V().querySelectorAll('.chip').forEach(c=>c.onclick=()=>vGames(c.dataset.s));
+  V().querySelectorAll('.gcard').forEach(b=>b.onclick=()=>{ G_CTX={keys,fromLesson:false}; const st=$('#stage'); st.hidden=false; document.body.style.overflow='hidden'; GAMES.find(g=>g.id===b.dataset.g).fn(keys) });
+}
+
+// ---------- Progress & settings ----------
+function vMe(){
+  const per=LVS.map(L=>{const ks=ORDER[L];const m=ks.filter(k=>box(k)>=4).length,l=ks.filter(k=>box(k)>=1).length;return {L,n:ks.length,m,l}});
+  const tops=TOPICS.map(t=>{const ks=[...new Set(LVS.flatMap(L=>t.lv[L]||[]))];return {t,n:ks.length,l:ks.filter(k=>box(k)>=1).length}});
+  const reads=Object.keys(S.readDone).filter(k=>!k.endsWith('_day')).length;
+  V().innerHTML=`<h1 style="font-size:1.8rem">Tiến bộ của Ron</h1>
+  <div class="stats"><div class="stat"><b>${S.stars}</b><span>Ngôi sao</span></div><div class="stat"><b>${Object.keys(S.lessonDays).length}</b><span>Ngày đã học</span></div><div class="stat"><b>${reads}</b><span>Bài đã đọc</span></div></div>
+  <div class="card"><h2>Theo cấp độ</h2>${per.map(p=>`<div class="lvbar"><span><span class="lv lv-${p.L}">${LV[p.L].name}</span></span><div class="bar"><i style="width:${p.l/p.n*100}%;background:var(--lv-${p.L.toLowerCase()})"></i></div><span>${p.l}/${p.n}</span></div>`).join('')}
+  <p class="muted" style="margin:0;font-size:.9rem">Thanh màu là số từ đã học. Từ được tính là “đã thuộc” khi trả lời đúng 4 lần ôn liên tiếp.</p></div>
+  <div class="card"><h2>Theo chủ đề</h2>${tops.map(x=>`<div class="lvbar" style="grid-template-columns:1fr 1fr 60px"><span>${x.t.icon} ${esc(x.t.vi)}</span><div class="bar"><i style="width:${x.l/x.n*100}%"></i></div><span>${x.l}/${x.n}</span></div>`).join('')}</div>
+  <div class="card"><h2>Cài đặt (dành cho bố mẹ)</h2>
+    <div><b>Cấp độ học</b><div class="row" style="margin-top:6px">${LVS.map(L=>`<label class="ck"><input type="checkbox" id="lv${L}" ${S.levels.includes(L)?'checked':''}> ${LV[L].full}</label>`).join('')}</div></div>
+    <div class="row"><label for="rate"><b>Tốc độ đọc</b></label><input type="range" id="rate" min="0.6" max="1.1" step="0.05" value="${S.rate}"><button class="btn ghost small" id="testV">🔊 Thử</button></div>
+    <div class="row"><button class="btn ghost small" id="reset">Xóa toàn bộ tiến trình</button><span id="resetMsg" class="muted"></span></div>
+    <p class="muted" style="margin:0;font-size:.85rem">Tiến trình được lưu trên trình duyệt của máy này. Mỗi ngày 1 bài gồm 5 từ: học từ, luyện từ vựng, luyện nghe và đọc hiểu. Từ vựng theo Cambridge YLE Handbook 2024 (${TOTAL} từ, ${TOPICS.length} chủ đề).</p>
+  </div>`;
+  LVS.forEach(L=>$('#lv'+L).onchange=()=>{ const lv=LVS.filter(x=>$('#lv'+x).checked); if(!lv.length){$('#lv'+L).checked=true;return} S.levels=lv; save() });
+  $('#rate').oninput=e=>{S.rate=+e.target.value;save()};
+  $('#testV').onclick=()=>say('Hello Ron! Let\'s learn English together.');
+  let armed=false; $('#reset').onclick=()=>{ if(!armed){armed=true;$('#reset').textContent='Bấm lần nữa để xác nhận';$('#resetMsg').textContent='Thao tác này không hoàn tác được.';return} const keep={levels:S.levels,rate:S.rate}; for(const k of Object.keys(S)) delete S[k]; Object.assign(S,{srs:{},stars:0,streak:0,lastLesson:null,readDone:{},lessonDays:{},ai:[],done:{},gen:{}},keep); save(); go('me') };
+}
+
+hdr(); go('today');
+})();
+</script>

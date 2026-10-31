@@ -1,0 +1,1331 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+<title>Ron Word Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: a single-column "quest journal" — sticky top bar, stacked mission cards, bottom tab bar; lessons open in a full-screen stage. */
+:root{
+  --bg:#EAF3FB; --surface:#FFFFFF; --surface-2:#F3F8FD; --ink:#1B2845; --ink-2:#55627F; --line:#D5E2F0;
+  --accent:#FF6B35; --accent-ink:#FFFFFF; --sun:#FFB800; --good:#1FA463; --good-bg:#DDF5E8; --bad:#E0435E; --bad-bg:#FCE3E8;
+  --lv-s:#1FA463; --lv-m:#2D7FF9; --lv-f:#8A4FFF; --mark:#FFE7A3;
+  --display:"Baloo 2", "Nunito", system-ui, sans-serif; --body:"Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r:18px; --shadow:0 2px 0 var(--line);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1628; --surface:#18223B; --surface-2:#1F2B48; --ink:#EAF0FF; --ink-2:#A3B0CC; --line:#2C3A5C;
+  --accent:#FF7F4F; --accent-ink:#1B1206; --sun:#FFC633; --good:#3CCB84; --good-bg:#173A2C; --bad:#FF6B83; --bad-bg:#3E1D27;
+  --lv-s:#3CCB84; --lv-m:#5E9DFF; --lv-f:#A97BFF; --mark:#5A4A16; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1628; --surface:#18223B; --surface-2:#1F2B48; --ink:#EAF0FF; --ink-2:#A3B0CC; --line:#2C3A5C;
+  --accent:#FF7F4F; --accent-ink:#1B1206; --sun:#FFC633; --good:#3CCB84; --good-bg:#173A2C; --bad:#FF6B83; --bad-bg:#3E1D27;
+  --lv-s:#3CCB84; --lv-m:#5E9DFF; --lv-f:#A97BFF; --mark:#5A4A16; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--lv-m);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg)}
+.top .wrap{display:flex;align-items:center;gap:12px;padding-block:12px}
+.logo{font-family:var(--display);font-weight:800;font-size:1.45rem;letter-spacing:-.01em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo b{color:var(--accent)}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:800;font-variant-numeric:tabular-nums}
+main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+main .wrap{display:flex;flex-direction:column;gap:16px;padding-block:8px 24px}
+.hello{display:flex;flex-direction:column;gap:2px}
+.hello h1{font-size:2rem}
+.hello p{margin:0;color:var(--ink-2);font-weight:600}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;min-width:0}
+.mission{flex-direction:row;align-items:center;gap:16px}
+.mission .ico{font-size:2.6rem;width:64px;height:64px;flex:none;display:grid;place-items:center;background:var(--surface-2);border-radius:16px}
+.mission .txt{flex:1;min-width:0}
+.mission h2{font-size:1.3rem}
+.mission p{margin:2px 0 0;color:var(--ink-2);font-size:.95rem}
+.done-tag{color:var(--good);font-weight:800}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-weight:700;font-size:1.1rem;padding:10px 20px;border-radius:14px;box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.btn.ghost{background:var(--surface-2);color:var(--ink);box-shadow:0 4px 0 var(--line)}
+.btn.good{background:var(--good);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--good) 60%,#000)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.small{font-size:.95rem;padding:6px 14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:12px;text-align:center}
+.stat b{display:block;font-family:var(--display);font-size:1.7rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--ink-2);font-weight:700}
+.week{display:flex;justify-content:space-between;gap:6px}
+.day{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.75rem;font-weight:800;color:var(--ink-2)}
+.day i{width:100%;max-width:40px;aspect-ratio:1;border-radius:12px;background:var(--surface-2);border:2px dashed var(--line);display:grid;place-items:center;font-style:normal;font-size:1.1rem}
+.day.on i{background:var(--sun);border:2px solid var(--sun)}
+.day.today span{color:var(--accent)}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.sec-h h2{font-size:1.25rem}
+.muted{color:var(--ink-2)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 14px;font-weight:800;font-size:.9rem}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.lv{display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:6px;color:#fff;vertical-align:middle}
+.lv-S{background:var(--lv-s)}.lv-M{background:var(--lv-m)}.lv-F{background:var(--lv-f)}
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.topic{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+.topic .e{font-size:2rem}
+.topic b{font-family:var(--display);font-size:1.05rem;line-height:1.2}
+.topic small{color:var(--ink-2);font-weight:700}
+.bar{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.wlist{display:flex;flex-direction:column}
+.wrow{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.wrow:last-child{border-bottom:0}
+.wrow .e{width:36px;font-size:1.5rem;text-align:center;flex:none}
+.wrow .w{flex:1;min-width:0}
+.wrow .w b{font-size:1.05rem}
+.wrow .w div{color:var(--ink-2);font-size:.9rem}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--line);flex:none}
+.dot.l{background:var(--sun)}.dot.m{background:var(--good)}
+.spk{width:40px;height:40px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;font-size:1.15rem;flex:none}
+.back{font-weight:800;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;padding:4px 0}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:2px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .wrap{display:grid;grid-template-columns:repeat(5,1fr);padding-block:6px}
+nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 0;font-weight:800;font-size:.78rem;color:var(--ink-2);border-radius:12px}
+nav.tabs button span{font-size:1.45rem;line-height:1.2}
+nav.tabs button[aria-current="page"]{color:var(--accent);background:var(--surface-2)}
+/* reading */
+.passage{font-size:1.15rem;line-height:1.75}
+.passage p{margin:0 0 .9em}
+.vw{background:linear-gradient(transparent 62%,var(--mark) 62%);cursor:pointer;border-radius:2px}
+.q{display:flex;flex-direction:column;gap:8px;padding-top:4px}
+.q b{font-size:1.05rem}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:2px solid var(--line);background:var(--surface-2);border-radius:12px;padding:8px 14px;font-weight:700;text-align:left}
+.opt[aria-pressed="true"]{border-color:var(--lv-m);background:color-mix(in srgb,var(--lv-m) 14%,var(--surface))}
+.opt.ok{border-color:var(--good);background:var(--good-bg)}
+.opt.no{border-color:var(--bad);background:var(--bad-bg)}
+.rlist{display:flex;flex-direction:column;gap:10px}
+.ritem{display:flex;align-items:center;gap:12px;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:12px 14px}
+.ritem .t{flex:1;min-width:0}
+.ritem .t b{font-family:var(--display);font-size:1.08rem;display:block;line-height:1.2}
+.ritem .t small{color:var(--ink-2);font-weight:600}
+.score{font-weight:800;color:var(--good);font-variant-numeric:tabular-nums}
+.note{background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:.92rem;color:var(--ink-2)}
+/* stage */
+.stage{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.stage-top{display:flex;align-items:center;gap:12px;padding-block:14px}
+.x{width:40px;height:40px;border-radius:12px;font-size:1.4rem;color:var(--ink-2);flex:none}
+.prog{flex:1;height:14px;background:var(--surface);border:2px solid var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--good);transition:width .3s}
+.stage-body{flex:1;overflow-y:auto}
+.stage-body .wrap{display:flex;flex-direction:column;gap:18px;padding-block:8px 24px;min-height:100%}
+.prompt{font-family:var(--display);font-weight:700;font-size:1.35rem;text-align:center}
+.flash{align-items:center;text-align:center;padding:28px 18px;gap:8px}
+.flash .big{font-size:5.5rem;line-height:1.1}
+.flash .word{font-family:var(--display);font-weight:800;font-size:2.6rem;line-height:1.1;overflow-wrap:anywhere}
+.flash .vi{font-size:1.3rem;font-weight:700;color:var(--ink-2)}
+.flash .tag{font-size:.8rem;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em}
+.hear{width:84px;height:84px;border-radius:50%;background:var(--lv-m);color:#fff;font-size:2.2rem;display:grid;place-items:center;margin:0 auto;box-shadow:0 5px 0 color-mix(in srgb,var(--lv-m) 60%,#000)}
+.hear:active{transform:translateY(3px)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:14px 10px;min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 4px 0 var(--line);font-weight:800;font-size:1.1rem;text-align:center;overflow-wrap:anywhere}
+.choice .ce{font-size:2.2rem;line-height:1.1}
+.choice .cv{font-size:.95rem;font-weight:700;color:var(--ink-2)}
+.choice.ok{border-color:var(--good);background:var(--good-bg);box-shadow:0 4px 0 var(--good)}
+.choice.no{border-color:var(--bad);background:var(--bad-bg);box-shadow:0 4px 0 var(--bad)}
+.slots{display:flex;justify-content:center;flex-wrap:wrap;gap:6px}
+.slot{width:42px;height:50px;border-bottom:4px solid var(--line);font-family:var(--display);font-weight:800;font-size:1.9rem;display:grid;place-items:center;text-transform:lowercase}
+.slot.ok{color:var(--good);border-color:var(--good)}.slot.no{color:var(--bad);border-color:var(--bad)}
+.tiles{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
+.tile{width:48px;height:52px;border-radius:12px;background:var(--surface);border:2px solid var(--line);box-shadow:0 4px 0 var(--line);font-family:var(--display);font-weight:800;font-size:1.6rem}
+.tile[disabled]{opacity:.25}
+.feedback{border-top:2px solid var(--line);background:var(--surface)}
+.feedback .wrap{display:flex;align-items:center;gap:12px;padding-block:14px}
+.feedback .msg{flex:1;min-width:0;font-weight:800;font-size:1.05rem}
+.feedback.ok{background:var(--good-bg);border-color:var(--good)}.feedback.ok .msg{color:var(--good)}
+.feedback.no{background:var(--bad-bg);border-color:var(--bad)}.feedback.no .msg{color:var(--bad)}
+.finish{align-items:center;text-align:center;justify-content:center;flex:1}
+.finish .trophy{font-size:5rem}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:2px solid var(--line);border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.12);padding-bottom:env(safe-area-inset-bottom,0px)}
+.sheet .wrap{display:flex;align-items:center;gap:14px;padding-block:16px}
+.sheet .e{font-size:2.6rem}
+.sheet .t{flex:1;min-width:0}
+.sheet .t b{font-family:var(--display);font-size:1.5rem;display:block;line-height:1.2}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label.ck{display:flex;align-items:center;gap:8px;font-weight:700}
+select,input[type=range]{font:inherit}
+select{background:var(--surface-2);border:2px solid var(--line);border-radius:10px;padding:6px 10px;color:var(--ink)}
+.lvbar{display:grid;grid-template-columns:90px 1fr 70px;gap:10px;align-items:center;font-weight:700;font-size:.92rem}
+.lvbar .bar{height:12px}
+.lvbar span:last-child{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.ai-out{white-space:pre-wrap}
+
+.lesson{gap:14px}
+.lesson-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800}
+.lesson h2{font-size:1.5rem}
+.wchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:inherit}
+.flash .wchips{justify-content:center}
+.wchip{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:2px solid var(--line);border-radius:999px;padding:4px 12px 4px 8px;font-weight:800;font-size:1.05rem}
+.wchip span{font-size:1.3rem}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.parts li{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:.8rem;font-weight:800;color:var(--ink-2);background:var(--surface-2);border-radius:12px;padding:8px 4px}
+.parts li span{font-size:1.5rem}
+.parts.big{grid-template-columns:1fr;gap:10px}
+.parts.big li{flex-direction:row;text-align:left;gap:12px;padding:12px 14px;background:var(--surface);border:2px solid var(--line);font-size:1rem;color:var(--ink)}
+.parts.big li small{display:block;color:var(--ink-2);font-weight:600;font-size:.88rem}
+.btn.big{font-size:1.3rem;padding:14px 20px}
+.feedback .sub{font-weight:600;font-size:.95rem;color:var(--ink);margin-top:2px}
+.vw.hl{background:var(--sun);color:#1B2845;font-weight:800;padding:0 3px;border-radius:5px}
+.tag{font-size:.8rem;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em}
+@media (max-width:420px){.parts li{font-size:.72rem}}
+@media (max-width:420px){.flash .word{font-size:2.1rem}.choices{gap:10px}.hello h1{font-size:1.7rem}}
+
+/* games */
+:root{--b1:#FF8FA3;--b2:#FFD166;--b3:#7BDFF2;--b4:#B2F7A1;--b5:#C9A7FF;--b-ink:#1B2845}
+.gtitle{flex:1;min-width:0;font-family:var(--display);font-weight:800;font-size:1.2rem;text-align:center}
+.gcards{display:flex;flex-direction:column;gap:12px}
+.gcard{display:flex;align-items:center;gap:14px;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:0 4px 0 var(--line)}
+.gcard:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.gcard .gi{font-size:2.6rem;width:60px;height:60px;display:grid;place-items:center;background:var(--surface-2);border-radius:16px;flex:none}
+.gcard b{display:block;font-family:var(--display);font-size:1.2rem;line-height:1.2}
+.gcard small{color:var(--ink-2);font-weight:600}
+.ghud{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800}
+.gprompt{text-align:center;font-weight:700;min-height:1.5em}
+.arena{position:relative;height:min(58vh,520px);border-radius:var(--r);overflow:hidden;border:2px solid var(--line);background:linear-gradient(var(--surface-2),var(--surface));touch-action:manipulation}
+.balloon{position:absolute;left:0;top:0;width:96px;height:112px;border-radius:50% 50% 46% 46%;background:var(--bc);color:var(--b-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;box-shadow:inset -8px -10px 0 rgba(0,0,0,.08);will-change:transform;padding:4px}
+.balloon::after{content:"";position:absolute;bottom:-26px;left:50%;width:2px;height:26px;background:var(--ink-2);opacity:.5}
+.balloon .be{font-size:1.9rem;line-height:1.1}
+.balloon .bw{font-weight:800;font-size:.85rem;line-height:1.1;text-align:center;overflow-wrap:anywhere}
+.balloon.popped{animation:popb .3s ease-out forwards}
+.balloon.shake .be{animation:shk .35s}
+@keyframes popb{to{opacity:0;scale:1.6}}
+@keyframes shk{25%{translate:-6px}75%{translate:6px}}
+.mem{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:8px}
+.mcard{position:relative;aspect-ratio:3/4;border-radius:14px;max-width:100%}
+.mcard .mback,.mcard .mface{position:absolute;inset:0;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px;text-align:center;border:2px solid var(--line);transition:transform .3s;backface-visibility:hidden}
+.mcard .mback{background:var(--lv-m);color:#fff;font-family:var(--display);font-weight:800;font-size:1.8rem;border-color:transparent}
+.mcard .mface{background:var(--surface);transform:rotateY(180deg)}
+.mcard.up .mback{transform:rotateY(180deg)}.mcard.up .mface{transform:rotateY(0)}
+.mcard.got .mface{border-color:var(--good);background:var(--good-bg)}
+.mface .me{font-size:1.8rem;line-height:1.1}.mface .mv{font-size:.7rem;font-weight:700;color:var(--ink-2);line-height:1.15}
+.mface .mw{font-family:var(--display);font-weight:800;font-size:.95rem;line-height:1.1;overflow-wrap:anywhere}
+.lives{font-size:1.3rem;letter-spacing:2px}
+.kb{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.key{height:46px;border-radius:10px;background:var(--surface);border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-family:var(--display);font-weight:800;font-size:1.3rem}
+.key.ok{background:var(--good-bg);border-color:var(--good)}.key.no{background:var(--bad-bg);border-color:var(--bad);opacity:.6}
+@media (max-width:420px){nav.tabs button{font-size:.7rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@keyframes pop{0%{transform:scale(.9)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+.pop{animation:pop .35s ease-out}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="logo">Ron <b>Word</b> Quest</div>
+  <span class="pill" title="Chuỗi ngày học">🔥 <span id="streak">0</span></span>
+  <span class="pill" title="Số sao">⭐ <span id="stars">0</span></span>
+</div></header>
+<main id="main"><div class="wrap" id="view"></div></main>
+<nav class="tabs" aria-label="Điều hướng"><div class="wrap">
+  <button data-tab="today"><span>🏠</span>Hôm nay</button>
+  <button data-tab="topics"><span>📚</span>Chủ đề</button>
+  <button data-tab="read"><span>📖</span>Bài đọc</button>
+  <button data-tab="games"><span>🎮</span>Game</button>
+  <button data-tab="me"><span>🏆</span>Tiến bộ</button>
+</div></nav>
+<div id="stage" class="stage" hidden></div>
+<div id="sheet" class="sheet" hidden></div>
+
+<script>
+// Cambridge YLE thematic vocabulary (Handbook for teachers 2024, pp.79-84)
+// Format per level: "word|nghĩa tiếng Việt|emoji" separated by ";"
+const TOPICS_RAW = [
+['animals','Animals','Con vật','🐾',{
+S:`animal|con vật|🐾;bear|con gấu|🐻;bee|con ong|🐝;bird|con chim|🐦;cat|con mèo|🐱;chicken|con gà|🐔;cow|con bò|🐄;crocodile|con cá sấu|🐊;dog|con chó|🐶;donkey|con lừa|🫏;duck|con vịt|🦆;elephant|con voi|🐘;fish|con cá|🐟;frog|con ếch|🐸;giraffe|hươu cao cổ|🦒;goat|con dê|🐐;hippo|hà mã|🦛;horse|con ngựa|🐴;jellyfish|con sứa|🪼;lizard|thằn lằn|🦎;monkey|con khỉ|🐒;mouse/mice|con chuột|🐭;pet|thú cưng|🐕;polar bear|gấu Bắc Cực|🐻‍❄️;sheep|con cừu|🐑;snake|con rắn|🐍;spider|con nhện|🕷️;tail|cái đuôi|;tiger|con hổ|🐯;zebra|ngựa vằn|🦓;zoo|sở thú|🦁`,
+M:`bat|con dơi|🦇;cage|cái lồng|;dolphin|cá heo|🐬;fly|con ruồi|🪰;kangaroo|chuột túi|🦘;kitten|mèo con|🐈;lion|sư tử|🦁;panda|gấu trúc|🐼;parrot|con vẹt|🦜;penguin|chim cánh cụt|🐧;puppy|chó con|🐶;rabbit|con thỏ|🐰;shark|cá mập|🦈;snail|ốc sên|🐌;whale|cá voi|🐳`,
+F:`beetle|bọ cánh cứng|🪲;butterfly|con bướm|🦋;camel|lạc đà|🐫;creature|sinh vật|;dinosaur|khủng long|🦕;eagle|đại bàng|🦅;extinct|tuyệt chủng|;fur|bộ lông thú|;insect|côn trùng|🐜;nest|tổ chim|🪺;octopus|bạch tuộc|🐙;swan|thiên nga|🦢;tortoise|rùa cạn|🐢;wild|hoang dã|;wing|đôi cánh|`}],
+['body','The body & face','Cơ thể & khuôn mặt','🙂',{
+S:`arm|cánh tay|💪;body|cơ thể|;ear|cái tai|👂;eye|con mắt|👁️;face|khuôn mặt|🙂;foot/feet|bàn chân|🦶;hair|tóc|💇;hand|bàn tay|✋;head|cái đầu|;leg|cái chân|🦵;mouth|cái miệng|👄;nose|cái mũi|👃;smile|nụ cười, mỉm cười|😊`,
+M:`back|cái lưng|;beard|râu cằm|🧔;blond|tóc vàng hoe|👱;curly|xoăn|;fair|(tóc) vàng nhạt|;fat|béo|;moustache|ria mép|;neck|cái cổ|;shoulder|vai|;stomach|cái bụng|;thin|gầy|;tooth/teeth|cái răng|🦷`,
+F:`elbow|khuỷu tay|;finger|ngón tay|☝️;knee|đầu gối|;toe|ngón chân|`}],
+['clothes','Clothes','Quần áo','👕',{
+S:`bag|cái túi, cặp|🎒;baseball cap|mũ lưỡi trai|🧢;boots|đôi ủng, bốt|👢;clothes|quần áo|;dress|váy liền|👗;glasses|kính mắt|👓;handbag|túi xách|👜;hat|cái mũ|👒;jacket|áo khoác|🧥;jeans|quần bò|👖;shirt|áo sơ mi|👔;shoe|chiếc giày|👟;shorts|quần đùi|🩳;skirt|chân váy|;sock|chiếc tất|🧦;trousers|quần dài|👖;T-shirt|áo phông|👕;wear|mặc, đeo|`,
+M:`coat|áo khoác dài|🧥;helmet|mũ bảo hiểm|⛑️;scarf|khăn quàng|🧣;sweater|áo len|;swimsuit|đồ bơi|🩱`,
+F:`belt|thắt lưng|;bracelet|vòng tay|;costume|trang phục hóa trang|;crown|vương miện|👑;glove|găng tay|🧤;necklace|vòng cổ|📿;pyjamas|bộ đồ ngủ|;pocket|cái túi (áo, quần)|;ring|chiếc nhẫn|💍;spot|chấm tròn|;spotted|có chấm bi|;stripe|kẻ sọc|;striped|có kẻ sọc|;sunglasses|kính râm|🕶️;trainers|giày thể thao|👟;umbrella|cái ô|☂️;uniform|đồng phục|`}],
+['colours','Colours','Màu sắc','🎨',{
+S:`black|màu đen|⚫;blue|màu xanh dương|🔵;brown|màu nâu|🟤;colour|màu sắc|🎨;grey|màu xám|;green|màu xanh lá|🟢;orange|màu cam|🟠;pink|màu hồng|🩷;purple|màu tím|🟣;red|màu đỏ|🔴;white|màu trắng|⚪;yellow|màu vàng|🟡`,
+F:`gold|màu vàng kim|🥇;silver|màu bạc|🥈;spotted|có chấm bi|;striped|có kẻ sọc|`}],
+['family','Family & friends','Gia đình & bạn bè','👪',{
+S:`baby|em bé|👶;boy|bé trai|👦;brother|anh trai, em trai|;child/children|đứa trẻ|🧒;classmate|bạn cùng lớp|;cousin|anh chị em họ|;dad|bố|;family|gia đình|👪;father|bố, cha|👨;friend|bạn|;girl|bé gái|👧;grandfather|ông|👴;grandma|bà|👵;grandmother|bà|👵;grandpa|ông|👴;kid|đứa trẻ|;live|sống|;man/men|người đàn ông|👨;mother|mẹ|👩;mum|mẹ|;old|già, cũ|;person/people|người|;sister|chị gái, em gái|;woman/women|người phụ nữ|👩;young|trẻ|`,
+M:`aunt|cô, dì, bác gái|;daughter|con gái|;granddaughter|cháu gái|;grandparent|ông bà|;grandson|cháu trai|;grown-up|người lớn|;parent|bố hoặc mẹ|;son|con trai|;uncle|chú, bác, cậu|`,
+F:`husband|chồng|;married|đã kết hôn|💍;surname|họ (tên)|;wife|vợ|`}],
+['food','Food & drink','Đồ ăn & thức uống','🍎',{
+S:`apple|quả táo|🍎;banana|quả chuối|🍌;bean|hạt đậu|🫘;bread|bánh mì|🍞;breakfast|bữa sáng|;burger|bánh hamburger|🍔;cake|bánh ngọt|🍰;candy|kẹo|🍬;carrot|cà rốt|🥕;chicken|thịt gà|🍗;chips|khoai tây chiên|🍟;chocolate|sô-cô-la|🍫;coconut|quả dừa|🥥;dinner|bữa tối|;drink|đồ uống, uống|🥤;eat|ăn|;egg|quả trứng|🥚;fish|cá|🐟;food|thức ăn|;fries|khoai tây chiên|🍟;fruit|hoa quả|;grape|quả nho|🍇;ice cream|kem|🍦;juice|nước ép|🧃;kiwi|quả kiwi|🥝;lemon|chanh vàng|🍋;lemonade|nước chanh|;lime|chanh xanh|;lunch|bữa trưa|;mango|quả xoài|🥭;meat|thịt|🥩;meatballs|thịt viên|;milk|sữa|🥛;onion|hành tây|🧅;orange|quả cam|🍊;pea|đậu Hà Lan|🫛;pear|quả lê|🍐;pie|bánh nướng nhân|🥧;pineapple|quả dứa|🍍;potato|khoai tây|🥔;rice|cơm, gạo|🍚;sausage|xúc xích|🌭;sweets|kẹo|🍬;tomato|cà chua|🍅;water|nước|💧;watermelon|dưa hấu|🍉`,
+M:`bottle|cái chai|🍼;bowl|cái bát|🥣;cheese|pho mát|🧀;coffee|cà phê|☕;cup|cái cốc, tách|;glass|cốc thủy tinh|🥛;hungry|đói|;milkshake|sữa lắc|🥤;noodles|mì sợi|🍜;pancake|bánh kếp|🥞;pasta|mì Ý|🍝;picnic|buổi dã ngoại|🧺;plate|cái đĩa|🍽️;salad|rau trộn|🥗;sandwich|bánh mì kẹp|🥪;sauce|nước sốt|;soup|món súp|🍲;tea|trà|🍵;thirsty|khát nước|;vegetable|rau củ|🥦`,
+F:`biscuit|bánh quy|🍪;butter|bơ|🧈;cereal|ngũ cốc|;chopsticks|đôi đũa|🥢;cookie|bánh quy|🍪;flour|bột mì|;fork|cái nĩa|🍴;honey|mật ong|🍯;jam|mứt|;knife|con dao|🔪;meal|bữa ăn|;olives|quả ô liu|🫒;pepper|hạt tiêu, ớt chuông|🫑;piece|miếng|;pizza|bánh pizza|🍕;salt|muối|🧂;smell|ngửi, mùi|;snack|đồ ăn vặt|;spoon|cái thìa|🥄;strawberry|dâu tây|🍓;sugar|đường|;taste|nếm, vị|;yoghurt|sữa chua|`}],
+['health','Health','Sức khỏe','🩺',{
+M:`cold|cảm lạnh, lạnh|🤧;cough|ho|;cry|khóc|😢;dentist|nha sĩ|;doctor|bác sĩ|🧑‍⚕️;earache|đau tai|;fall|ngã|;fine|khỏe|;headache|đau đầu|🤕;hospital|bệnh viện|🏥;ill|ốm|;matter|(What's the matter?) có chuyện gì|;nurse|y tá|;sick|bị ốm|🤒;stomach-ache|đau bụng|;temperature|nhiệt độ, sốt|🌡️;tired|mệt|😴;toothache|đau răng|`,
+F:`bandage|băng gạc|🩹;chemist|hiệu thuốc|;cut|vết cắt, cắt|;fall over|ngã nhào|;medicine|thuốc|💊;x-ray|chụp X-quang|🩻`}],
+['home','The home','Ngôi nhà','🏠',{
+S:`apartment|căn hộ|🏢;armchair|ghế bành|;bath|bồn tắm|🛁;bathroom|phòng tắm|;bed|cái giường|🛏️;bedroom|phòng ngủ|;bookcase|tủ sách|📚;box|cái hộp|📦;camera|máy ảnh|📷;chair|cái ghế|🪑;clock|đồng hồ (treo tường)|🕰️;computer|máy tính|💻;cupboard|tủ chạn|;desk|bàn học|;dining room|phòng ăn|;doll|búp bê|🪆;door|cửa ra vào|🚪;flat|căn hộ|🏢;flower|bông hoa|🌸;garden|khu vườn|🏡;hall|hành lang, sảnh|;home|nhà|;house|ngôi nhà|🏠;kitchen|nhà bếp|;lamp|cái đèn|💡;living room|phòng khách|🛋️;mat|tấm thảm nhỏ|;mirror|cái gương|🪞;phone|điện thoại|📱;picture|bức tranh|🖼️;radio|đài, ra-đi-ô|📻;room|căn phòng|;rug|tấm thảm|;sleep|ngủ|😴;sofa|ghế sofa|🛋️;table|cái bàn|;television|ti vi|📺;TV|ti vi|📺;toy|đồ chơi|🧸;tree|cái cây|🌳;wall|bức tường|🧱;watch|đồng hồ đeo tay|⌚;window|cửa sổ|🪟`,
+M:`address|địa chỉ|;balcony|ban công|;basement|tầng hầm|;blanket|cái chăn|;downstairs|tầng dưới|;dream|giấc mơ, mơ|💭;elevator|thang máy|🛗;floor|sàn nhà, tầng|;internet|mạng internet|🌐;lift|thang máy|🛗;message|tin nhắn|💬;roof|mái nhà|;seat|chỗ ngồi|💺;shower|vòi hoa sen|🚿;stairs|cầu thang|;toothbrush|bàn chải đánh răng|🪥;toothpaste|kem đánh răng|;towel|khăn tắm|;upstairs|tầng trên|;wash|rửa, giặt|🧼`,
+F:`brush|bàn chải, chải|;comb|cái lược|;cooker|bếp nấu|;cushion|gối tựa|;diary|nhật ký|📔;entrance|lối vào|;envelope|phong bì|✉️;fridge|tủ lạnh|;gate|cái cổng|;key|chìa khóa|🔑;letter|lá thư|💌;oven|lò nướng|;screen|màn hình|🖥️;shampoo|dầu gội|🧴;shelf|cái giá, kệ|;soap|xà phòng|🧼;stamp|con tem|;step|bậc thang|;swing|xích đu|;telephone|điện thoại|☎️`}],
+['materials','Materials','Chất liệu','🪵',{
+S:`paper|giấy|📄`,
+F:`card|bìa cứng, thiệp|;glass|thủy tinh|;gold|vàng|🥇;metal|kim loại|;plastic|nhựa|;silver|bạc|🥈;wood|gỗ|🪵;wool|len|🧶`}],
+['numbers','Numbers','Số đếm','🔢',{
+S:`one|số 1|1️⃣;two|số 2|2️⃣;three|số 3|3️⃣;four|số 4|4️⃣;five|số 5|5️⃣;six|số 6|6️⃣;seven|số 7|7️⃣;eight|số 8|8️⃣;nine|số 9|9️⃣;ten|số 10|🔟;eleven|số 11|;twelve|số 12|;thirteen|số 13|;fourteen|số 14|;fifteen|số 15|;sixteen|số 16|;seventeen|số 17|;eighteen|số 18|;nineteen|số 19|;twenty|số 20|`,
+M:`thirty|số 30|;forty|số 40|;fifty|số 50|;sixty|số 60|;seventy|số 70|;eighty|số 80|;ninety|số 90|;hundred|một trăm|💯;pair|một đôi, một cặp|;first|thứ nhất|🥇;second|thứ hai|🥈;third|thứ ba|🥉;fourth|thứ tư|;fifth|thứ năm|;sixth|thứ sáu|;seventh|thứ bảy|;eighth|thứ tám|;ninth|thứ chín|;tenth|thứ mười|;eleventh|thứ mười một|;twelfth|thứ mười hai|;thirteenth|thứ mười ba|;fourteenth|thứ mười bốn|;fifteenth|thứ mười lăm|;sixteenth|thứ mười sáu|;seventeenth|thứ mười bảy|;eighteenth|thứ mười tám|;nineteenth|thứ mười chín|;twentieth|thứ hai mươi|`,
+F:`thousand|một nghìn|;million|một triệu|;several|một vài|;twenty-first|thứ hai mươi mốt|;thirtieth|thứ ba mươi|;thirty-first|thứ ba mươi mốt|`}],
+['places','Places & directions','Địa điểm & phương hướng','🗺️',{
+S:`behind|phía sau|;between|ở giữa|;bookshop|hiệu sách|📚;end|cuối, kết thúc|;here|ở đây|;in|ở trong|;in front of|phía trước|;on|ở trên|;park|công viên|🏞️;playground|sân chơi|🛝;shop|cửa hàng|🏪;store|cửa hàng|🏪;street|đường phố|;there|ở đó|;under|ở dưới|;zoo|sở thú|🦁`,
+M:`above|phía trên|;below|phía dưới|;building|tòa nhà|🏢;bus station|bến xe buýt|;bus stop|điểm dừng xe buýt|🚏;café|quán cà phê|☕;car park|bãi đỗ xe|🅿️;centre|trung tâm|;cinema|rạp chiếu phim|🎦;circle|hình tròn|⭕;circus|rạp xiếc|🎪;city|thành phố|🏙️;farm|nông trại|🚜;funfair|hội chợ vui chơi|🎡;hospital|bệnh viện|🏥;library|thư viện|;map|bản đồ|🗺️;market|chợ|;near|gần|;opposite|đối diện|;place|nơi chốn|;shopping|mua sắm|🛍️;sports centre|trung tâm thể thao|;square|quảng trường, hình vuông|;station|nhà ga|🚉;straight|thẳng|;supermarket|siêu thị|🛒;swimming pool|bể bơi|🏊;town|thị trấn|;town centre|trung tâm thị trấn|`,
+F:`airport|sân bay|🛫;bank|ngân hàng|🏦;bridge|cây cầu|🌉;castle|lâu đài|🏰;chemist|hiệu thuốc|;club|câu lạc bộ|;college|trường cao đẳng|;corner|góc phố|;east|phía đông|;factory|nhà máy|🏭;fire station|trạm cứu hỏa|;front|phía trước|;get to|đi đến|;hotel|khách sạn|🏨;kilometre|ki-lô-mét|;left|bên trái|⬅️;London|Luân Đôn|;middle|ở giữa|;museum|bảo tàng|🏛️;north|phía bắc|;over|bên trên, qua|;path|đường mòn|;police station|đồn cảnh sát|🚓;post office|bưu điện|🏤;restaurant|nhà hàng|🍽️;right|bên phải|➡️;skyscraper|nhà chọc trời|;south|phía nam|;stadium|sân vận động|🏟️;straight on|đi thẳng|;theatre|nhà hát|🎭;university|trường đại học|🎓;way|con đường, lối đi|;west|phía tây|`}],
+['sports','Sports & leisure','Thể thao & giải trí','⚽',{
+S:`badminton|cầu lông|🏸;ball|quả bóng|⚽;baseball|bóng chày|⚾;basketball|bóng rổ|🏀;bat|cái gậy (đánh bóng)|🏏;beach|bãi biển|🏖️;bike|xe đạp|🚲;boat|con thuyền|⛵;book|quyển sách|📖;bounce|nảy (bóng)|;camera|máy ảnh|📷;catch|bắt (bóng)|;doll|búp bê|🪆;draw|vẽ|✏️;drawing|bức vẽ|;drive|lái xe|;enjoy|thích thú|;favourite|yêu thích nhất|⭐;fishing|câu cá|🎣;fly|bay|;football|bóng đá|⚽;game|trò chơi|🎲;guitar|đàn ghi-ta|🎸;hobby|sở thích|;hockey|khúc côn cầu|🏑;jump|nhảy|;kick|đá|;kite|con diều|🪁;listen|nghe|👂;music|âm nhạc|🎵;photo|bức ảnh|📸;piano|đàn piano|🎹;picture|bức tranh|🖼️;play|chơi|;radio|đài, ra-đi-ô|📻;read|đọc|📖;ride|đi (xe), cưỡi|;run|chạy|🏃;sing|hát|🎤;skateboard|ván trượt|🛹;skateboarding|trượt ván|🛹;soccer|bóng đá|⚽;song|bài hát|🎶;sport|thể thao|;story|câu chuyện|;swim|bơi|🏊;table tennis|bóng bàn|🏓;take a photo|chụp ảnh|📸;television|ti vi|📺;tennis|quần vợt|🎾;tennis racket|vợt tennis|🎾;throw|ném|;toy|đồ chơi|🧸;walk|đi bộ|🚶;watch|xem|`,
+M:`band|ban nhạc|;CD|đĩa CD|💿;cinema|rạp chiếu phim|🎦;comic|truyện tranh|;comic book|cuốn truyện tranh|;dance|nhảy múa|💃;drive|lái xe|;DVD|đĩa DVD|📀;email|thư điện tử|📧;film|bộ phim|🎬;fish|câu cá|🎣;go shopping|đi mua sắm|🛍️;goal|bàn thắng, khung thành|🥅;holiday|kỳ nghỉ|🏝️;hop|nhảy lò cò|;ice skates|giày trượt băng|⛸️;ice skating|trượt băng|⛸️;kick|đá|;movie|bộ phim|🎬;net|cái lưới|;party|bữa tiệc|🎉;player|người chơi|;pool|bể bơi|;practice|sự luyện tập|;practise|luyện tập|;present|món quà|🎁;ride|đi (xe), cưỡi|;roller skates|giày patin|🛼;roller skating|trượt patin|🛼;sail|đi thuyền buồm|⛵;score|ghi điểm, tỉ số|;skate|trượt|;skip|nhảy dây|;sports centre|trung tâm thể thao|;swim|bơi|🏊;swimming pool|bể bơi|🏊;text|nhắn tin|;towel|khăn tắm|;video|video|📹;walk|đi bộ|🚶`,
+F:`backpack|ba lô|🎒;cartoon|phim hoạt hình|;channel|kênh (TV)|;chess|cờ vua|♟️;collect|sưu tầm|;concert|buổi hòa nhạc|;diary|nhật ký|📔;drum|cái trống|🥁;festival|lễ hội|;flashlight|đèn pin|🔦;golf|đánh gôn|⛳;hotel|khách sạn|🏨;instrument|nhạc cụ|;invitation|lời mời, thiệp mời|💌;join|tham gia|;magazine|tạp chí|;match|trận đấu|;meet|gặp|;member|thành viên|;online|trực tuyến|;pop music|nhạc pop|;prize|giải thưởng|🏆;programme|chương trình|;puzzle|trò ghép hình, câu đố|🧩;pyramid|kim tự tháp|;quiz|cuộc đố vui|;race|cuộc đua|;rock music|nhạc rock|🎸;rucksack|ba lô|🎒;score|ghi điểm, tỉ số|;ski|trượt tuyết|🎿;sledge|xe trượt tuyết|🛷;snowball|quả cầu tuyết|;snowboard|ván trượt tuyết|🏂;snowboarding|trượt ván tuyết|🏂;snowman|người tuyết|⛄;stage|sân khấu|;suitcase|va li|🧳;swing|xích đu|;team|đội|;tent|cái lều|⛺;torch|đèn pin|🔦;tune|giai điệu|;tyre|lốp xe|;umbrella|cái ô|☂️;violin|đàn vi-ô-lông|🎻;volleyball|bóng chuyền|🏐;winner|người chiến thắng|🏆`}],
+['time','Time','Thời gian','⏰',{
+S:`afternoon|buổi chiều|;birthday|sinh nhật|🎂;clock|đồng hồ|🕰️;day|ngày|;evening|buổi tối|;in|vào (thời gian)|;morning|buổi sáng|🌅;night|ban đêm|🌙;today|hôm nay|;watch|đồng hồ đeo tay|⌚;year|năm|`,
+M:`after|sau khi|;always|luôn luôn|;before|trước khi|;every|mỗi|;never|không bao giờ|;o'clock|giờ đúng|🕐;sometimes|thỉnh thoảng|;week|tuần|;weekend|cuối tuần|;yesterday|hôm qua|;Monday|thứ Hai|;Tuesday|thứ Ba|;Wednesday|thứ Tư|;Thursday|thứ Năm|;Friday|thứ Sáu|;Saturday|thứ Bảy|;Sunday|Chủ nhật|`,
+F:`a.m.|giờ sáng|;after|sau|;ago|cách đây|;autumn|mùa thu|🍂;before|trước|;calendar|cuốn lịch|📅;century|thế kỷ|;date|ngày tháng|;early|sớm|;end|cuối|;fall|mùa thu|🍂;future|tương lai|;hour|giờ đồng hồ|;how long|bao lâu|;late|muộn|;later|lát nữa, sau đó|;midday|giữa trưa|;midnight|nửa đêm|;minute|phút|;month|tháng|;p.m.|giờ chiều|;past|quá, qua|;quarter|mười lăm phút|;spring|mùa xuân|🌷;summer|mùa hè|☀️;time|thời gian|⏰;tomorrow|ngày mai|;tonight|tối nay|;winter|mùa đông|❄️;January|tháng Một|;February|tháng Hai|;March|tháng Ba|;April|tháng Tư|;May|tháng Năm|;June|tháng Sáu|;July|tháng Bảy|;August|tháng Tám|;September|tháng Chín|;October|tháng Mười|;November|tháng Mười Một|;December|tháng Mười Hai|`}],
+['toys','Toys','Đồ chơi','🧸',{
+S:`alien|người ngoài hành tinh|👽;ball|quả bóng|⚽;balloon|bóng bay|🎈;baseball|bóng chày|⚾;basketball|bóng rổ|🏀;bike|xe đạp|🚲;board game|trò chơi cờ bàn|🎲;boat|con thuyền|⛵;car|ô tô|🚗;doll|búp bê|🪆;football|bóng đá|⚽;game|trò chơi|🎲;helicopter|trực thăng|🚁;lorry|xe tải|🚚;monster|quái vật|👾;motorbike|xe máy|🏍️;plane|máy bay|✈️;robot|người máy|🤖;teddy bear|gấu bông|🧸;toy|đồ chơi|🧸;train|tàu hỏa|🚂;truck|xe tải|🚚`,
+M:`model|mô hình|`}],
+['transport','Transport','Phương tiện','🚌',{
+S:`bike|xe đạp|🚲;boat|con thuyền|⛵;bus|xe buýt|🚌;car|ô tô|🚗;drive|lái xe|;fly|bay|;go|đi|;helicopter|trực thăng|🚁;lorry|xe tải|🚚;motorbike|xe máy|🏍️;plane|máy bay|✈️;ride|đi (xe), cưỡi|;run|chạy|🏃;ship|con tàu|🚢;swim|bơi|🏊;train|tàu hỏa|🚂;truck|xe tải|🚚`,
+M:`bus station|bến xe buýt|;bus stop|điểm dừng xe buýt|🚏;drive|lái xe|;driver|tài xế|;ride|đi (xe), cưỡi|;station|nhà ga|🚉;ticket|vé|🎫;tractor|máy kéo|🚜;trip|chuyến đi|`,
+F:`ambulance|xe cứu thương|🚑;bicycle|xe đạp|🚲;fire engine|xe cứu hỏa|🚒;journey|hành trình|;lift|đi nhờ xe|;motorway|đường cao tốc|🛣️;passenger|hành khách|;platform|sân ga|;racing|đua (xe)|🏎️;railway|đường sắt|🛤️;rocket|tên lửa|🚀;spaceship|tàu vũ trụ|🛸;taxi|xe taxi|🚕;tour|chuyến tham quan|;traffic|giao thông|🚦;wheel|bánh xe|🛞`}],
+['weather','Weather','Thời tiết','🌦️',{
+S:`sun|mặt trời|☀️`,
+M:`cloud|đám mây|☁️;cloudy|nhiều mây|🌥️;ice|băng, đá|🧊;rain|mưa|🌧️;rainbow|cầu vồng|🌈;sky|bầu trời|;snow|tuyết|🌨️;sunny|có nắng|🌞;weather|thời tiết|;wind|gió|🌬️;windy|nhiều gió|`,
+F:`fog|sương mù|🌫️;foggy|có sương mù|🌫️;storm|cơn bão|⛈️`}],
+['work','Work','Nghề nghiệp','🧑‍🏫',{
+S:`teacher|giáo viên|🧑‍🏫`,
+M:`circus|rạp xiếc|🎪;clown|chú hề|🤡;cook|đầu bếp, nấu ăn|🧑‍🍳;dentist|nha sĩ|;doctor|bác sĩ|🧑‍⚕️;driver|tài xế|;farmer|nông dân|🧑‍🌾;film star|ngôi sao điện ảnh|🌟;hospital|bệnh viện|🏥;nurse|y tá|;pirate|cướp biển|🏴‍☠️;pop star|ngôi sao nhạc pop|🎤;work|làm việc|`,
+F:`actor|diễn viên|🎭;airport|sân bay|🛫;ambulance|xe cứu thương|🚑;artist|họa sĩ|🧑‍🎨;astronaut|phi hành gia|🧑‍🚀;business|kinh doanh|;businessman|doanh nhân|💼;designer|nhà thiết kế|;engineer|kỹ sư|;factory|nhà máy|🏭;fire engine|xe cứu hỏa|🚒;firefighter|lính cứu hỏa|🧑‍🚒;job|công việc|;journalist|nhà báo|;manager|người quản lý|;mechanic|thợ máy|🧑‍🔧;meeting|cuộc họp|;news|tin tức|;newspaper|tờ báo|📰;office|văn phòng|;photographer|nhiếp ảnh gia|;pilot|phi công|🧑‍✈️;police officer|cảnh sát|👮;police station|đồn cảnh sát|🚓;queen|nữ hoàng|👸;rocket|tên lửa|🚀;singer|ca sĩ|🧑‍🎤;taxi|xe taxi|🚕;waiter|người phục vụ|`}],
+['world','The world around us','Thế giới quanh ta','🌍',{
+S:`beach|bãi biển|🏖️;sand|cát|;sea|biển|🌊;shell|vỏ sò|🐚;street|đường phố|;sun|mặt trời|☀️;tree|cái cây|🌳;water|nước|💧`,
+M:`building|tòa nhà|🏢;city|thành phố|🏙️;country|đất nước|;countryside|vùng nông thôn|;field|cánh đồng|;forest|khu rừng|🌲;grass|cỏ|🌱;ground|mặt đất|;island|hòn đảo|🏝️;lake|hồ nước|;leaf/leaves|chiếc lá|🍃;moon|mặt trăng|🌙;mountain|ngọn núi|⛰️;plant|cây trồng|🪴;river|dòng sông|;road|con đường|🛣️;rock|tảng đá|🪨;sky|bầu trời|;star|ngôi sao|⭐;town|thị trấn|;village|ngôi làng|;waterfall|thác nước|;wave|con sóng|🌊;world|thế giới|🌍`,
+F:`air|không khí|;bridge|cây cầu|🌉;castle|lâu đài|🏰;cave|hang động|;desert|sa mạc|🏜️;Earth|Trái Đất|🌏;entrance|lối vào|;environment|môi trường|;exit|lối ra|;fire|lửa|🔥;future|tương lai|;hill|ngọn đồi|;land|đất liền|;ocean|đại dương|🌊;planet|hành tinh|🪐;pond|cái ao|;space|vũ trụ|🌌;stone|hòn đá|;stream|con suối|;view|quang cảnh|;wood|khu rừng nhỏ|🌳`}]
+];
+
+// Daily reading bank. q: [question, options, correctIndex]
+const READINGS = [
+// ---------- STARTERS ----------
+{lv:'S',title:"Sam's pet",vi:"Thú cưng của Sam",text:
+`Sam is eight. He has a pet dog. The dog's name is Spot. Spot is brown and white. He has big ears and a long tail.
+
+Every morning, Sam and Spot go to the park. Spot likes running and catching a ball. Sam likes kicking the ball.
+
+Spot doesn't like cats! When he sees a cat, he runs behind Sam. Sam laughs. "You're a funny dog, Spot!"`,
+qs:[["How old is Sam?",["seven","eight","nine"],1],["What colour is Spot?",["black and white","brown and white","brown and black"],1],["Where do Sam and Spot go every morning?",["to the zoo","to the beach","to the park"],2],["Spot likes cats.",["Yes","No"],1]]},
+
+{lv:'S',title:"Lunch at the beach",vi:"Bữa trưa ở bãi biển",text:
+`It's Sunday. Anna and her family are at the beach. The sun is hot and the sea is blue.
+
+Anna's dad has a big bag. In the bag there are sandwiches, apples, bananas and some lemonade. Anna's brother, Ben, wants an ice cream.
+
+After lunch, Anna and Ben play in the sand. Anna finds a pink shell. "Look, Mum! It's beautiful!" Mum smiles and takes a photo.`,
+qs:[["What day is it?",["Saturday","Sunday","Monday"],1],["What does Ben want?",["a burger","a cake","an ice cream"],2],["What colour is the shell?",["pink","white","yellow"],0],["Who takes a photo?",["Dad","Mum","Ben"],1]]},
+
+{lv:'S',title:"My bedroom",vi:"Phòng ngủ của tớ",text:
+`Hello! I'm Lucy. This is my bedroom. It's small but I love it.
+
+My bed is next to the window. On my bed there is a big teddy bear. His name is Mr Brown. There is a desk under the window. On my desk there are some books, a computer and a lamp.
+
+I have a box of toys. There are three dolls, a robot and a ball in it. My favourite toy is the robot. It can walk and talk!`,
+qs:[["Where is Lucy's bed?",["next to the door","next to the window","under the window"],1],["What is the teddy bear's name?",["Mr Brown","Mr Black","Mr Bear"],0],["How many dolls are in the box?",["two","three","four"],1],["What is Lucy's favourite toy?",["the ball","the doll","the robot"],2]]},
+
+{lv:'S',title:"At the zoo",vi:"Ở sở thú",text:
+`Tom and Grace are at the zoo with their grandma. First they see the elephants. The elephants are very big and grey. One baby elephant is drinking water.
+
+Next, they go to see the monkeys. The monkeys are jumping and playing in the trees. One monkey has a banana. Grace laughs.
+
+Tom's favourite animal is the tiger. The tiger is sleeping under a tree. "Shh! Don't wake him!" says Grandma.`,
+qs:[["Who is at the zoo with Tom and Grace?",["their grandpa","their grandma","their mum"],1],["What is the baby elephant doing?",["eating","sleeping","drinking water"],2],["What has one monkey got?",["an apple","a banana","a ball"],1],["Tom's favourite animal is the tiger.",["Yes","No"],0]]},
+
+{lv:'S',title:"Kim's birthday",vi:"Sinh nhật của Kim",text:
+`Today is Kim's birthday. She is nine. Her friends come to her house for a party.
+
+Kim's mum makes a big chocolate cake. There are nine candles on it. Everyone sings "Happy Birthday!"
+
+Kim's friends give her presents. Alex gives her a kite. Sue gives her a book about horses. Kim loves horses! After the cake, the children play games in the garden.`,
+qs:[["How old is Kim?",["eight","nine","ten"],1],["What cake does Mum make?",["a lemon cake","an orange cake","a chocolate cake"],2],["What does Alex give Kim?",["a kite","a book","a doll"],0],["Where do the children play games?",["in the kitchen","in the garden","in the park"],1]]},
+
+{lv:'S',title:"Ben's school bag",vi:"Cặp sách của Ben",text:
+`Ben goes to school every day. He has a blue school bag.
+
+What's in Ben's bag? There are two books, a pencil case and a ruler. In the pencil case there are three pencils, an eraser and some crayons. There is a red apple and a bottle of water too.
+
+Ben's teacher is Mrs Green. She is very nice. Ben likes English and music. He doesn't like maths!`,
+qs:[["What colour is Ben's bag?",["red","green","blue"],2],["How many pencils are there?",["two","three","four"],1],["What is the teacher's name?",["Mrs Green","Mrs Brown","Mrs White"],0],["Ben likes maths.",["Yes","No"],1]]},
+
+{lv:'S',title:"The farm",vi:"Nông trại",text:
+`Nick lives on a farm with his mum and dad. There are lots of animals on the farm.
+
+There are ten cows, five horses and a lot of sheep. There are chickens and ducks too. The ducks swim in the water every morning.
+
+Nick has a donkey. Its name is Happy. Nick gives Happy carrots and apples. After school, Nick rides Happy around the farm.`,
+qs:[["Where does Nick live?",["in a flat","on a farm","next to the beach"],1],["How many horses are there?",["five","ten","three"],0],["What is the donkey's name?",["Spot","Happy","Sunny"],1],["What does Nick give the donkey?",["bread and milk","carrots and apples","bananas and grapes"],1]]},
+
+{lv:'S',title:"Breakfast time",vi:"Giờ ăn sáng",text:
+`It's seven o'clock in the morning. Dan is in the kitchen with his family.
+
+Dan's sister, May, eats bread and eggs. His dad drinks orange juice and eats rice. Dan doesn't like eggs. He likes bananas and milk.
+
+The cat is in the kitchen too. It wants some fish! "No, Tiger," says Mum. "You can have your breakfast at eight o'clock."`,
+qs:[["Where is Dan?",["in the bedroom","in the kitchen","in the garden"],1],["What does May eat?",["bread and eggs","rice and fish","bananas"],0],["Dan likes eggs.",["Yes","No"],1],["What is the cat's name?",["Tiger","Spot","Kitty"],0]]},
+
+{lv:'S',title:"A rainy day",vi:"Một ngày mưa",text:
+`Today it's raining. Alice can't play in the park. She is sad.
+
+Her grandpa says, "Let's play a board game!" They sit on the sofa in the living room and play. Grandpa is very good at board games, but Alice wins!
+
+Then Alice draws a picture. In her picture there is a big yellow sun, a blue sky and some flowers. "Now it's sunny!" she says.`,
+qs:[["What's the weather like today?",["sunny","raining","snowing"],1],["Who plays a board game with Alice?",["her grandpa","her dad","her brother"],0],["Who wins the game?",["Grandpa","Alice","nobody"],1],["What colour is the sun in the picture?",["orange","red","yellow"],2]]},
+
+{lv:'S',title:"Hugo's toys",vi:"Đồ chơi của Hugo",text:
+`Hugo has lots of toys. He has a red car, a big lorry, a train and a helicopter.
+
+His favourite toy is a green monster. It has three eyes and a big mouth. Hugo's little sister, Eva, doesn't like the monster. She likes her dolls and her balloon.
+
+At night, Hugo puts his toys in a big box under his bed. Then he reads a story and goes to sleep.`,
+qs:[["What colour is the car?",["red","blue","green"],0],["How many eyes has the monster got?",["two","three","four"],1],["Eva likes the monster.",["Yes","No"],1],["Where does Hugo put his toys at night?",["on the table","in a box under his bed","in the garden"],1]]},
+
+{lv:'S',title:"Sports day",vi:"Ngày hội thể thao",text:
+`It's sports day at Pat's school. All the children are in the playground.
+
+Pat can run very fast. She wins the running race! Her friend Bill likes jumping. He can jump very high.
+
+Then the children play football. Pat kicks the ball and... goal! Everyone is happy. After the game, the teacher gives the children some water and oranges.`,
+qs:[["Where are the children?",["in the classroom","in the playground","at the beach"],1],["What does Pat win?",["the jumping race","the running race","the swimming race"],1],["What does Bill like?",["running","jumping","swimming"],1],["What does the teacher give the children?",["water and oranges","ice cream","juice and cake"],0]]},
+
+{lv:'S',title:"Jill and the frog",vi:"Jill và chú ếch",text:
+`Jill is in her garden. She is looking at the flowers. Then she sees a small green frog under a tree.
+
+"Hello, frog!" says Jill. The frog jumps. Jump! Jump! It jumps on Jill's shoe. Jill laughs.
+
+Jill wants to take the frog to her bedroom, but her mum says, "No, Jill. Frogs live in gardens, next to water." So Jill says "Goodbye!" and the frog jumps away.`,
+qs:[["Where is Jill?",["in her bedroom","in her garden","in the park"],1],["What colour is the frog?",["brown","yellow","green"],2],["Where does the frog jump?",["on Jill's hat","on Jill's shoe","on Jill's hand"],1],["Jill takes the frog to her bedroom.",["Yes","No"],1]]},
+
+// ---------- MOVERS ----------
+{lv:'M',title:"A trip to the island",vi:"Chuyến đi ra đảo",text:
+`Last summer, Jack and his parents went on holiday to an island. They went there by boat. The sea was very blue and Jack saw some dolphins swimming next to the boat!
+
+On the island, they stayed in a small hotel near the beach. Every morning Jack went swimming, and in the afternoons he climbed rocks with his dad.
+
+One day it was very windy and it rained all day. Jack and his mum stayed inside and played cards. In the evening they ate fish and rice at a café. Jack thinks it was his best holiday ever.`,
+qs:[["How did Jack's family go to the island?",["by plane","by boat","by bus"],1],["What did Jack see next to the boat?",["sharks","dolphins","whales"],1],["What did Jack do with his dad in the afternoons?",["climbed rocks","went fishing","played football"],0],["What was the weather like on the bad day?",["sunny and hot","windy and rainy","cloudy and cold"],1],["Jack didn't enjoy the holiday.",["True","False"],1]]},
+
+{lv:'M',title:"Daisy is ill",vi:"Daisy bị ốm",text:
+`On Monday morning, Daisy didn't want to get up. She had a headache and a sore throat, and she felt very hot.
+
+Her mum looked at her and said, "I think you've got a temperature. You can't go to school today." Mum called the doctor.
+
+The doctor came at ten o'clock. "You've got a bad cold," she said. "Drink lots of water, take this medicine and stay in bed for two days."
+
+Daisy was bored in bed, so her grandmother came and read her some stories. On Wednesday Daisy felt fine again and went back to school.`,
+qs:[["What day did Daisy feel ill?",["Monday","Tuesday","Wednesday"],0],["What did the doctor say Daisy had?",["a toothache","a bad cold","a stomach-ache"],1],["How long did Daisy have to stay in bed?",["one day","two days","a week"],1],["Who read stories to Daisy?",["her mum","her grandmother","her teacher"],1],["When did Daisy go back to school?",["on Tuesday","on Wednesday","on Friday"],1]]},
+
+{lv:'M',title:"The new library",vi:"Thư viện mới",text:
+`There is a new library in the town centre. It's opposite the supermarket, next to the bus station. Fred went there with his class last Friday.
+
+The library has three floors. Downstairs there are books for children and comfortable seats. On the first floor there are computers, and upstairs there is a café.
+
+Fred chose two books: a comic book about pirates and a book about kangaroos. The librarian said, "You can keep these books for two weeks." Fred wants to go back every Saturday.`,
+qs:[["Where is the new library?",["next to the hospital","opposite the supermarket","behind the cinema"],1],["How many floors has the library got?",["two","three","four"],1],["What is on the first floor?",["a café","computers","children's books"],1],["What was Fred's comic book about?",["pirates","kangaroos","clowns"],0],["How long can Fred keep the books?",["one week","two weeks","a month"],1]]},
+
+{lv:'M',title:"Clare's busy week",vi:"Một tuần bận rộn của Clare",text:
+`Clare is always busy after school. On Mondays she has swimming lessons at the sports centre. On Tuesdays and Thursdays she practises the piano at home.
+
+On Wednesdays she goes to the park with her best friend, Vicky. They skip and play badminton. Clare is better at badminton than Vicky, but Vicky can skip faster!
+
+On Fridays Clare helps her dad in the kitchen. They cook dinner for the family. Last Friday they made noodle soup. At the weekend, Clare sometimes goes to the cinema, but she never gets up early!`,
+qs:[["Where does Clare have swimming lessons?",["at the sports centre","at the beach","at school"],0],["When does Clare practise the piano?",["Mondays and Wednesdays","Tuesdays and Thursdays","Fridays"],1],["Who can skip faster?",["Clare","Vicky","Dad"],1],["What did Clare and her dad make last Friday?",["pasta","pancakes","noodle soup"],2],["Clare always gets up early at the weekend.",["True","False"],1]]},
+
+{lv:'M',title:"The lost kitten",vi:"Chú mèo con bị lạc",text:
+`One evening, Peter heard a sad noise in the garden. He went outside with a torch and looked behind the trees. There was a small grey kitten in the grass!
+
+The kitten was hungry and thirsty. Peter gave it some milk in a bowl. Then he made a poster: "Lost kitten! Grey with white feet. Please call 0428 931 506."
+
+The next day, an old woman from the village phoned. "That's my kitten, Smoky!" she said. She came to Peter's house and gave him a big box of chocolates. "Thank you for helping Smoky!" she said.`,
+qs:[["When did Peter hear the noise?",["in the morning","in the evening","at lunchtime"],1],["What colour was the kitten?",["black","grey","brown"],1],["What did Peter give the kitten?",["water","milk","fish"],1],["What was the kitten's name?",["Smoky","Spot","Snowy"],0],["What did the woman give Peter?",["some money","a box of chocolates","a book"],1]]},
+
+{lv:'M',title:"At the funfair",vi:"Ở hội chợ vui chơi",text:
+`Last Saturday Zoe's uncle took her and her cousin Paul to the funfair. It was a sunny day and there were lots of people.
+
+First they went on the big wheel. From the top, they could see the whole town and the river. Paul was a bit scared, but Zoe loved it!
+
+Then they watched a clown. He was funny and he threw balls into the air. After that, Zoe's uncle bought them some popcorn and a milkshake. At the end of the day Zoe won a teddy bear in a game. She gave it to Paul because he was sad.`,
+qs:[["Who took Zoe to the funfair?",["her aunt","her uncle","her dad"],1],["What could they see from the big wheel?",["the sea","the town and the river","the mountains"],1],["Who was scared on the big wheel?",["Zoe","Paul","the uncle"],1],["What did the clown do?",["sang a song","threw balls into the air","rode a bike"],1],["Who got the teddy bear in the end?",["Zoe","Paul","the clown"],1]]},
+
+{lv:'M',title:"A day on the farm",vi:"Một ngày ở nông trại",text:
+`Julia's grandparents are farmers. They live in the countryside, far from the city. Last weekend, Julia visited them.
+
+On Saturday morning, Julia helped her grandfather with the animals. They gave food to the cows and the sheep. Then Julia drove the tractor with Grandpa! It was very slow but very loud.
+
+In the afternoon, Julia and her grandmother picked vegetables in the field: carrots, potatoes and onions. In the evening Grandma made a delicious vegetable soup. Julia was very tired, so she went to bed at eight o'clock.`,
+qs:[["Where do Julia's grandparents live?",["in the city","in the countryside","on an island"],1],["What did Julia do with her grandfather?",["picked vegetables","drove the tractor","made soup"],1],["The tractor was fast and quiet.",["True","False"],1],["Which vegetables did they NOT pick?",["carrots","tomatoes","onions"],1],["Why did Julia go to bed early?",["She was ill","She was tired","She was sad"],1]]},
+
+{lv:'M',title:"The school concert",vi:"Buổi hòa nhạc ở trường",text:
+`Next month there is a concert at Lily's school. Every class must sing a song or play some music. Lily's class wants to dance too.
+
+Lily is learning to play the guitar. She practises every evening after dinner. Her brother Jim plays the drums in a band, so he helps her.
+
+On the day of the concert, Lily was very worried. But when she started to play, she felt happy. All the parents clapped and her mum took lots of photos. After the concert, the head teacher said Lily's class was the best!`,
+qs:[["When is the concert?",["next week","next month","next year"],1],["What instrument is Lily learning?",["the piano","the guitar","the drums"],1],["Who helps Lily practise?",["her mum","her teacher","her brother Jim"],2],["How did Lily feel before the concert?",["worried","bored","hungry"],0],["The head teacher said Lily's class was the best.",["True","False"],0]]},
+
+{lv:'M',title:"Snow in the mountains",vi:"Tuyết trên núi",text:
+`In winter, Mark and his family went to the mountains. It was very cold and there was lots of snow everywhere.
+
+On the first day, Mark learned to ice skate on a lake. He fell over many times, but he didn't cry. He laughed! His sister Mary was better than him.
+
+The next day it was sunny, so they built a big snowman. They gave him a carrot nose, a scarf and an old hat. In the evening they drank hot chocolate and watched a film. Mark wants to go back to the mountains next year.`,
+qs:[["When did Mark's family go to the mountains?",["in summer","in winter","in spring"],1],["Where did Mark learn to ice skate?",["on a lake","at the sports centre","on a river"],0],["Who was better at ice skating?",["Mark","Mary","Dad"],1],["What did they give the snowman for a nose?",["a carrot","a banana","a stone"],0],["What did they do in the evening?",["played cards","watched a film","went skiing"],1]]},
+
+{lv:'M',title:"Sally's dream",vi:"Giấc mơ của Sally",text:
+`Last night Sally had a strange dream. She was a pirate on a big ship! Her parrot, Polly, sat on her shoulder and talked all the time.
+
+The ship sailed to an island with a tall waterfall and a dark forest. Sally and Polly found a map under a rock. The map showed a box of gold near the waterfall.
+
+Sally started to dig in the sand... but then she heard a noise. "Sally! Wake up! It's time for school!" It was her mum. Sally was sad because she never found the gold.`,
+qs:[["What was Sally in her dream?",["a pirate","a clown","a doctor"],0],["Where did Polly sit?",["on Sally's head","on Sally's shoulder","on the ship"],1],["Where did they find the map?",["in a cave","under a rock","in the forest"],1],["The gold was near the ___.",["waterfall","village","mountain"],0],["Who woke Sally up?",["her dad","Polly","her mum"],2]]},
+
+// ---------- FLYERS ----------
+{lv:'F',title:"The museum of dinosaurs",vi:"Bảo tàng khủng long",text:
+`Last Thursday, Harry's class went on a school trip to the Natural History Museum in London. They travelled by train, and the journey took about an hour.
+
+The most exciting part of the museum was the room with dinosaurs. Harry saw the bones of a huge dinosaur which lived about seventy million years ago. A guide explained that dinosaurs became extinct, possibly because a giant rock from space hit the Earth.
+
+After lunch, the children visited a room full of insects and butterflies from all over the world. Harry's friend Oliver collected information for a project. Before they left, Harry bought a small model of a dinosaur in the museum shop. He has already put it on the shelf in his bedroom.`,
+qs:[["How did the class travel to London?",["by bus","by train","by car"],1],["When did the huge dinosaur live?",["seven million years ago","seventy million years ago","seven hundred years ago"],1],["Why might the dinosaurs have become extinct?",["because of a big storm","because a rock from space hit the Earth","because there was no water"],1],["What did Oliver do?",["bought a model","collected information for a project","took photos of butterflies"],1],["Where is Harry's model now?",["on the shelf in his bedroom","in his school bag","in the museum shop"],0]]},
+
+{lv:'F',title:"Helen wants to be an astronaut",vi:"Helen muốn làm phi hành gia",text:
+`Helen is eleven and she has a big dream: she wants to be an astronaut. She has read lots of books about space and planets, and she knows the names of all the planets in the right order.
+
+Last month, Helen's dad took her to a space centre. She saw a real rocket and met an engineer who designs spaceships. "To be an astronaut, you need to study hard, especially maths and science," the engineer said. "You also need to be fit and healthy."
+
+Since that day, Helen has done exercise every morning before school. She goes running in the park and she has joined the school volleyball team. Her favourite subject is science, and her teacher says she might win the science prize this year.`,
+qs:[["How old is Helen?",["ten","eleven","twelve"],1],["Where did Helen's dad take her?",["to a museum","to a space centre","to an airport"],1],["Who did Helen meet there?",["an astronaut","a pilot","an engineer"],2],["What has Helen joined?",["the football team","the volleyball team","the chess club"],1],["Helen's teacher thinks she might win the science prize.",["True","False"],0]]},
+
+{lv:'F',title:"A storm at the campsite",vi:"Cơn bão ở khu cắm trại",text:
+`In August, William and his family went camping near a lake in the north of the country. They put up their tent next to a small stream, and in the evenings they cooked sausages over a fire.
+
+On the third night, the weather changed. Dark clouds covered the sky and the wind became very strong. At about midnight there was a terrible storm. Rain fell so hard that water started coming into the tent!
+
+William's dad used a flashlight to find a safer place. They carried their sleeping bags and backpacks to the car and slept there until the morning. When the sun came up, they saw that their tent was in the middle of a pond! William said it was the most exciting night of his life.`,
+qs:[["Where did William's family go camping?",["near the sea","near a lake","in the desert"],1],["What did they cook over the fire?",["fish","sausages","pancakes"],1],["When did the storm start?",["in the afternoon","at about midnight","early in the morning"],1],["Where did the family sleep after the storm started?",["in the tent","in a hotel","in the car"],2],["What did they see in the morning?",["their tent was in a pond","a rainbow","a big tree on the tent"],0]]},
+
+{lv:'F',title:"The best job in the world",vi:"Công việc tuyệt nhất thế giới",text:
+`Katy's mother is a photographer for a famous magazine. Her job is to travel around the world and take photos of wild animals.
+
+Last year she spent three weeks in the desert in Africa. She took photos of camels, lions and eagles. It was extremely hot during the day, but at night it was surprisingly cold. Once, she waited six hours behind a rock to photograph a family of elephants drinking from a river.
+
+Katy thinks her mother has the best job in the world, but it isn't always easy. Sometimes she is away from home for a month, and Katy misses her. When her mum comes back, she always brings Katy a present and tells her amazing stories. Katy would like to be a photographer too, or perhaps a journalist.`,
+qs:[["What does Katy's mother photograph?",["famous people","wild animals","buildings"],1],["How long was she in the desert?",["three days","three weeks","three months"],1],["What was the weather like at night in the desert?",["very hot","surprisingly cold","rainy"],1],["How long did she wait behind a rock?",["six hours","two hours","one day"],0],["What would Katy like to be?",["a pilot","a photographer or a journalist","a waiter"],1]]},
+
+{lv:'F',title:"George's invitation",vi:"Lời mời của George",text:
+`George found an envelope in the post box. Inside there was an invitation: "Come to Sophia's fancy dress party on Saturday 14th June at 3 p.m. Please wear a costume!"
+
+George didn't know what to wear. His sister Holly suggested a king costume, so they made a crown from gold card and found an old red blanket for a cloak. George also borrowed his grandfather's walking stick.
+
+At the party, Sophia was dressed as a queen and her brother Richard was a police officer. There was a quiz about famous castles, and George won first prize: a big puzzle of a castle. Everyone said George was the best king they had ever seen!`,
+qs:[["When was Sophia's party?",["Saturday 4th June","Saturday 14th June","Sunday 14th July"],1],["Who suggested the king costume?",["George's mum","Holly","Sophia"],1],["What was the crown made from?",["gold card","metal","plastic"],0],["What was Richard dressed as?",["a king","a pirate","a police officer"],2],["What prize did George win?",["a crown","a puzzle of a castle","a book"],1]]},
+
+{lv:'F',title:"Saving the pond",vi:"Cứu lấy cái ao",text:
+`Near Emma's school there is a small pond. A few years ago it was full of frogs, fish and beautiful swans. But recently people have thrown plastic bottles and rubbish into the water, and most of the creatures have disappeared.
+
+Emma and her classmates decided to do something to help the environment. With their teacher, they started an "Eco Club". Every Saturday morning, members meet at the pond with gloves and bags to collect the rubbish.
+
+They have also made posters for the town: "Keep our pond clean!" The local newspaper wrote a story about them, and a journalist took a photo. Now, after six months, the water is much cleaner, and last week Emma saw a family of ducks swimming there for the first time.`,
+qs:[["What was the problem with the pond?",["It was too small","People threw rubbish into it","There was no water"],1],["When do the Eco Club members meet?",["every Saturday morning","every Sunday afternoon","after school every day"],0],["What do they take to the pond?",["fishing nets","gloves and bags","cameras"],1],["Who wrote a story about the club?",["the local newspaper","a magazine","the teacher"],0],["What did Emma see last week?",["swans","frogs","a family of ducks"],2]]},
+
+{lv:'F',title:"A journey by spaceship",vi:"Hành trình bằng tàu vũ trụ",text:
+`This is a story that Michael wrote for his English class.
+
+"In the year 2090, I am travelling to Mars by spaceship with three other astronauts. The journey takes seven months. Inside the spaceship, there isn't any air outside the windows, so we can never open them.
+
+Every day we do exercise for two hours, because our bodies get weak in space. We eat special food from packets and drink water through a straw. My favourite meal is pasta with tomato sauce, but it doesn't taste as good as my mum's!
+
+When we arrive, Mars looks like a red desert with huge mountains and deep caves. I put on my space suit, open the exit door and become the first boy to walk on Mars!"`,
+qs:[["Where is Michael travelling in his story?",["to the Moon","to Mars","to the Sun"],1],["How long does the journey take?",["seven weeks","seven months","seven years"],1],["Why do the astronauts exercise every day?",["because they are bored","because their bodies get weak in space","because it is fun"],1],["What is Michael's favourite meal?",["pizza","noodle soup","pasta with tomato sauce"],2],["What does Mars look like?",["a blue ocean","a red desert","a green forest"],1]]},
+
+{lv:'F',title:"Betty's first violin concert",vi:"Buổi biểu diễn vi-ô-lông đầu tiên của Betty",text:
+`Betty started learning the violin when she was seven. At first, the noise was so terrible that her dog used to hide under the sofa! But Betty practised for half an hour every day, and slowly she got better.
+
+This spring, her music teacher asked her to play in a concert at the town theatre. Betty was excited but also nervous, because she had never played on a stage before.
+
+On the evening of the concert, the theatre was full. When it was Betty's turn, her hands were shaking. Then she saw her grandmother smiling in the front row, and she began to play a beautiful tune. At the end, everyone stood up and clapped for several minutes. Afterwards, the manager of the theatre invited her to play again in the winter festival.`,
+qs:[["How old was Betty when she started the violin?",["five","seven","nine"],1],["What did her dog do at first?",["sang","hid under the sofa","ran into the garden"],1],["Where was the concert?",["at school","at the town theatre","in the park"],1],["Who did Betty see in the front row?",["her grandmother","her teacher","her dog"],0],["Who invited her to play at the winter festival?",["the head teacher","the theatre manager","a journalist"],1]]}
+];
+
+// Starters daily lessons: 5 words + a short reading that uses all 5 words.
+// w: word keys (as in vocab.js, lowercase); t: reading; q: [question, options, correctIndex]
+const LESSONS_S = [
+{w:"cat,dog,bird,fish,pet",vi:"Thú cưng của Ben",t:`Ben has got three pets. He has got a cat, a dog and a bird. The cat is black. The dog is big and brown. The bird is yellow and it can sing.
+
+Ben's sister has got a pet too. It's a small orange fish!`,q:[["How many pets has Ben got?",["two","three","four"],1],["What colour is the bird?",["yellow","black","brown"],0],["Ben's sister has got a fish.",["Yes","No"],0]]},
+{w:"cow,chicken,duck,goat,sheep",vi:"Ở nông trại",t:`This is Grandpa's farm. There is a big cow. She is eating grass. There are six chickens and two ducks. The ducks are swimming.
+
+There is a goat with a long beard. And look! There are ten white sheep on the hill.`,q:[["What is the cow doing?",["sleeping","eating grass","swimming"],1],["How many ducks are there?",["two","six","ten"],0],["What colour are the sheep?",["black","brown","white"],2]]},
+{w:"horse,donkey,frog,snake,animal",vi:"Con vật Lucy thích",t:`Lucy loves animals. Her favourite animal is the horse. It can run very fast. Her brother likes the donkey because it is funny.
+
+In the garden, Lucy sees a small green frog. "Can you see a snake?" asks her brother. "No!" says Lucy. "I don't like snakes!"`,q:[["What is Lucy's favourite animal?",["the donkey","the horse","the frog"],1],["The frog is green.",["Yes","No"],0],["Lucy likes snakes.",["Yes","No"],1]]},
+{w:"elephant,giraffe,monkey,tiger,zoo",vi:"Đi sở thú",t:`Today Tom is at the zoo with his dad. He sees a big grey elephant. It is drinking water. The giraffe is very tall. It is eating leaves.
+
+The monkeys are funny. They are jumping in the trees. The tiger is sleeping. "Shh!" says Dad.`,q:[["Who is at the zoo with Tom?",["his mum","his dad","his sister"],1],["What is the elephant doing?",["drinking water","eating leaves","sleeping"],0],["What is the tiger doing?",["jumping","running","sleeping"],2]]},
+{w:"bear,polar bear,crocodile,hippo,zebra",vi:"Những con vật lớn",t:`Kim has a book about big animals. On page one there is a brown bear. On page two there is a polar bear. It is white and it lives in a cold place.
+
+There is a long green crocodile and a fat grey hippo. Kim's favourite is the zebra. It is black and white!`,q:[["What colour is the polar bear?",["brown","white","grey"],1],["What colour is the hippo?",["green","grey","black"],1],["What is Kim's favourite animal?",["the zebra","the bear","the crocodile"],0]]},
+{w:"bee,spider,lizard,jellyfish,mouse/mice",vi:"Những con vật nhỏ",t:`Some animals are very small. A bee is small and yellow. It likes flowers. A spider has got eight legs.
+
+Look at the wall! There is a lizard. It is green. In the sea there is a jellyfish. And in the kitchen there are two mice. They want some cheese!`,q:[["How many legs has a spider got?",["six","eight","ten"],1],["Where is the lizard?",["on the wall","in the sea","in the kitchen"],0],["What do the mice want?",["flowers","cheese","water"],1]]},
+{w:"tail,sun,sand,sea,shell",vi:"Một ngày ở biển",t:`The sun is hot today. Anna and her dog are at the beach. The sea is blue. Anna is sitting on the sand.
+
+She finds a pink shell. Her dog is very happy. It is moving its tail. Then it runs into the sea!`,q:[["What is the weather like?",["The sun is hot.","It is raining.","It is cold."],0],["What colour is the shell?",["white","pink","blue"],1],["The dog runs into the sea.",["Yes","No"],0]]},
+{w:"head,hair,eye,ear,nose",vi:"Bạn người tuyết của tớ",t:`Look at my snowman! He has got a big round head. He hasn't got hair, but he has got a red hat.
+
+His eyes are two black stones. His nose is a long orange carrot. He hasn't got ears. My snowman is very funny!`,q:[["Has the snowman got hair?",["Yes","No"],1],["What is the snowman's nose?",["a stone","a carrot","a banana"],1],["What colour is his hat?",["red","black","orange"],0]]},
+{w:"face,mouth,smile,arm,hand",vi:"Bức tranh của May",t:`May is drawing a picture of her mum. She draws a round face and a big mouth. Her mum has got a beautiful smile.
+
+Then May draws two long arms. In one hand, her mum has got a flower. "I love it!" says Mum.`,q:[["Who is May drawing?",["her mum","her dad","her friend"],0],["What has Mum got in her hand?",["a cake","a flower","a book"],1],["Mum likes the picture.",["Yes","No"],0]]},
+{w:"leg,foot/feet,body,monster,alien",vi:"Quái vật và người ngoài hành tinh",t:`Sam has got two funny toys. One is a monster. It has got a big green body and four legs. It has got very big feet!
+
+The other toy is an alien. It is blue. It has got one leg and three eyes. Sam likes the alien best.`,q:[["How many legs has the monster got?",["two","three","four"],2],["What colour is the alien?",["green","blue","red"],1],["Which toy does Sam like best?",["the monster","the alien","the robot"],1]]},
+{w:"red,blue,yellow,green,colour",vi:"Cầu vồng màu sắc",t:`Grace has got a new box of pencils. "What's your favourite colour?" asks her teacher.
+
+"I like red and yellow," says Grace. She draws a red apple and a yellow sun. Then she draws a blue sea and some green trees. It's a beautiful picture!`,q:[["What does Grace draw with red?",["an apple","the sun","the sea"],0],["What colour are the trees?",["blue","green","yellow"],1],["What colour is the sea?",["blue","red","green"],0]]},
+{w:"black,white,brown,grey,pink",vi:"Những chú mèo con",t:`Mrs Brown has got five cats. One cat is black and one cat is white. Two cats are brown.
+
+The small cat is grey. It has got a pink nose. Its name is Smoky. Smoky likes sleeping on Mrs Brown's bed.`,q:[["How many cats are brown?",["one","two","three"],1],["What colour is the small cat?",["grey","black","white"],0],["Where does Smoky like sleeping?",["on the sofa","in the garden","on the bed"],2]]},
+{w:"orange,purple,dress,skirt,hat",vi:"Đi dự tiệc",t:`Today is a party. Eva is wearing a purple dress. Her sister Ann is wearing an orange skirt and a white T-shirt.
+
+Their mum has got a big hat. It is purple and orange! "You look beautiful," says Dad.`,q:[["What colour is Eva's dress?",["orange","purple","pink"],1],["Who is wearing a skirt?",["Eva","Ann","Mum"],1],["What colours is Mum's hat?",["purple and orange","red and blue","black and white"],0]]},
+{w:"shirt,t-shirt,trousers,jeans,wear",vi:"Quần áo của Tom",t:`On Monday, Tom wears his school clothes: a white shirt and grey trousers.
+
+On Saturday, he doesn't go to school. He wears a blue T-shirt and his old jeans. He likes his jeans. They are his favourite clothes!`,q:[["What does Tom wear on Monday?",["a T-shirt and jeans","a shirt and trousers","a dress"],1],["What colour is his T-shirt?",["white","grey","blue"],2],["Tom likes his jeans.",["Yes","No"],0]]},
+{w:"shoe,sock,boots,shorts,jacket",vi:"Trời mưa hay trời nắng?",t:`When it's sunny, Ben wears shorts, a T-shirt and white shoes.
+
+When it's raining, he wears a jacket and his green boots. Today Ben is sad. He can't find one sock! Where is it? It's under the bed!`,q:[["What does Ben wear when it's sunny?",["shorts","a jacket","boots"],0],["What colour are his boots?",["white","green","red"],1],["Where is the sock?",["in the bag","under the bed","on the chair"],1]]},
+{w:"bag,handbag,glasses,baseball cap,clothes",vi:"Đi du lịch",t:`Lily's family are going on holiday. Lily puts her clothes in a big bag. Her brother puts his baseball cap in his bag too.
+
+Mum has got a small handbag. "Where are my glasses?" asks Grandma. "They're on your head, Grandma!" laughs Lily.`,q:[["Who has got a small handbag?",["Lily","Mum","Grandma"],1],["Where are Grandma's glasses?",["in the bag","on her head","on the table"],1],["Lily's brother has got a baseball cap.",["Yes","No"],0]]},
+{w:"family,mother,father,mum,dad",vi:"Gia đình của Nick",t:`This is Nick's family. His mother's name is Sue. She is a teacher. His father's name is Bill.
+
+Every evening, Nick's mum cooks dinner and his dad reads a story. Nick loves his family very much.`,q:[["What is Nick's mother's name?",["Sue","Bill","Kim"],0],["What does Nick's dad do every evening?",["cooks dinner","reads a story","plays football"],1],["Nick's mother is a teacher.",["Yes","No"],0]]},
+{w:"brother,sister,baby,boy,girl",vi:"Em bé mới",t:`Alex is a boy. He is nine. He has got one sister. Her name is Jill. She is a girl of six.
+
+Now there is a new baby in the family! He is very small and he cries a lot. Alex is happy. "Now I've got a brother!"`,q:[["How old is Alex?",["six","eight","nine"],2],["What is his sister's name?",["Jill","May","Ann"],0],["The new baby is a ...",["girl","boy","cat"],1]]},
+{w:"grandfather,grandmother,grandma,grandpa,old",vi:"Thăm ông bà",t:`On Sundays, Kim visits her grandfather and grandmother. They are old, but they are very happy.
+
+Grandma makes a big cake. Grandpa and Kim play a board game in the garden. Grandpa always wins!`,q:[["When does Kim visit her grandparents?",["on Mondays","on Saturdays","on Sundays"],2],["What does Grandma make?",["a cake","a pie","a sandwich"],0],["Who always wins the game?",["Kim","Grandpa","Grandma"],1]]},
+{w:"cousin,friend,classmate,teacher,kid",vi:"Ở trường",t:`Hugo has got a lot of friends at school. His best friend is Dan. Dan is his classmate.
+
+Hugo's cousin, Matt, is in his class too. Their teacher is Miss Pat. She is very nice. All the kids in the class like her.`,q:[["Who is Hugo's best friend?",["Matt","Dan","Pat"],1],["Who is Hugo's cousin?",["Matt","Dan","Miss Pat"],0],["The kids like their teacher.",["Yes","No"],0]]},
+{w:"man/men,woman/women,child/children,person/people,young",vi:"Ở công viên",t:`There are a lot of people in the park today. A man is reading a book. Two women are talking.
+
+Three children are playing with a ball. One young girl is riding a bike. An old man is sleeping under a tree!`,q:[["What is the man doing?",["reading a book","playing football","riding a bike"],0],["How many children are playing with a ball?",["two","three","four"],1],["Who is sleeping?",["a young girl","an old man","a woman"],1]]},
+{w:"live,house,home,garden,flower",vi:"Nhà của Jill",t:`Jill lives in a big house. Her home is next to the park. There is a garden in front of the house.
+
+In the garden there are a lot of flowers. Some flowers are red and some are yellow. Jill's mum loves her garden.`,q:[["Where is Jill's home?",["next to the park","next to the sea","next to the zoo"],0],["Where are the flowers?",["in the kitchen","in the garden","in the bedroom"],1],["What colour are the flowers?",["red and yellow","blue and pink","white"],0]]},
+{w:"one,two,three,four,five",vi:"Đếm nào!",t:`Let's count! On the table there is one apple and two bananas. There are three cats under the table.
+
+In the garden there are four birds in a tree. And look! There are five ducks on the water. One, two, three, four, five!`,q:[["How many bananas are there?",["one","two","three"],1],["Where are the three cats?",["in the tree","under the table","on the water"],1],["How many ducks are there?",["three","four","five"],2]]},
+{w:"six,seven,eight,nine,ten",vi:"Sinh nhật của Matt",t:`Matt is ten today! There are ten candles on his cake. Six friends come to his party.
+
+His mum gives them seven ice creams, but there are eight children! "Oh no!" says Mum. Then she finds nine ice creams in the kitchen. Now everyone is happy!`,q:[["How old is Matt?",["eight","nine","ten"],2],["How many friends come to the party?",["six","seven","eight"],0],["How many ice creams does Mum find in the kitchen?",["seven","eight","nine"],2]]},
+{w:"eleven,twelve,thirteen,fourteen,fifteen",vi:"Trận bóng đá",t:`There are eleven players in a football team. Today our team has twelve players: eleven players and one more.
+
+My brother is thirteen and he is our best player. My cousin is fourteen. He kicks the ball fifteen times and gets a goal!`,q:[["How many players are in a football team?",["eleven","twelve","thirteen"],0],["How old is my brother?",["thirteen","fourteen","fifteen"],0],["Who gets a goal?",["my brother","my cousin","me"],1]]},
+{w:"sixteen,seventeen,eighteen,nineteen,twenty",vi:"Cửa hàng đồ chơi",t:`In the toy shop there are sixteen balls and seventeen dolls. There are eighteen cars on a long table.
+
+There are nineteen teddy bears and twenty robots! Ben wants a robot. "Can I have one, Dad?" "Yes, it's your birthday!"`,q:[["How many dolls are there?",["sixteen","seventeen","eighteen"],1],["How many robots are there?",["nineteen","twenty","eighteen"],1],["Can Ben have a robot?",["Yes","No"],0]]},
+{w:"apple,banana,grape,pear,fruit",vi:"Hoa quả yêu thích",t:`Pat loves fruit. Every day she eats an apple. Her brother likes bananas. He eats two bananas for breakfast!
+
+Their mum likes grapes and their dad likes pears. Pat's dog doesn't like fruit. It likes meat!`,q:[["What does Pat eat every day?",["an apple","a banana","a pear"],0],["Who likes grapes?",["Dad","Mum","Pat"],1],["Pat's dog likes fruit.",["Yes","No"],1]]},
+{w:"mango,pineapple,watermelon,coconut,kiwi",vi:"Chợ hoa quả",t:`Sue and her mum are at the market. There is a lot of fruit. Sue sees a yellow mango and a big pineapple.
+
+Mum buys a green watermelon. It is very big! Sue wants a coconut and two small kiwis. "OK," says Mum. "Let's make a fruit salad!"`,q:[["Where are Sue and her mum?",["at the market","at school","at the zoo"],0],["What colour is the watermelon?",["yellow","green","brown"],1],["How many kiwis does Sue want?",["one","two","three"],1]]},
+{w:"lemon,lime,lemonade,juice,drink",vi:"Đồ uống mát lạnh",t:`It's very hot today. "Let's make a drink!" says Grandma. She has got three lemons and two limes.
+
+Kim and Grandma make lemonade. Kim's brother doesn't like lemonade. He drinks orange juice. "Mmm! Lemonade is great!" says Kim.`,q:[["How many lemons has Grandma got?",["two","three","four"],1],["What do Kim and Grandma make?",["juice","lemonade","milk"],1],["What does Kim's brother drink?",["orange juice","lemonade","water"],0]]},
+{w:"breakfast,egg,bread,milk,eat",vi:"Bữa sáng",t:`It's seven o'clock. It's time for breakfast. Tom eats an egg and some bread. He drinks a big glass of milk.
+
+His sister doesn't eat eggs. She eats bread with chocolate. "Hurry up! It's time for school!" says Mum.`,q:[["What time is it?",["six o'clock","seven o'clock","eight o'clock"],1],["What does Tom drink?",["milk","juice","water"],0],["Tom's sister eats eggs.",["Yes","No"],1]]},
+{w:"lunch,rice,meat,meatballs,potato",vi:"Bữa trưa ở trường",t:`At school, Lucy has lunch at twelve o'clock. Today there is rice, meat and some vegetables.
+
+Lucy's friend Nick doesn't like rice. He has meatballs and a big potato. "I'm very hungry!" says Nick. He eats it all!`,q:[["When does Lucy have lunch?",["at ten o'clock","at twelve o'clock","at two o'clock"],1],["Nick likes rice.",["Yes","No"],1],["What does Nick have?",["meatballs and a potato","rice and meat","fish"],0]]},
+{w:"dinner,sausage,bean,pea,carrot",vi:"Bữa tối",t:`What's for dinner? Dad is cooking sausages. There are beans and peas too.
+
+May doesn't like peas, but she likes carrots. "Can I have carrots, please?" she asks. "Yes, here you are," says Dad.`,q:[["What is Dad cooking?",["sausages","fish","chicken"],0],["What doesn't May like?",["carrots","peas","sausages"],1],["Does Dad give May carrots?",["Yes","No"],0]]},
+{w:"tomato,onion,food,water,burger",vi:"Bánh hamburger tự làm",t:`Dan likes making food. Today he is making a burger. He puts some meat, a tomato and an onion in it.
+
+"Mmm! It's very good!" he says. Then he drinks a glass of water. His favourite food is burgers!`,q:[["What is Dan making?",["a pizza","a burger","a cake"],1],["What does Dan drink?",["juice","milk","water"],2],["What is Dan's favourite food?",["burgers","rice","fish"],0]]},
+{w:"chips,fries,ice cream,cake,chocolate",vi:"Món ăn ngon",t:`In England, people say "chips". In America, they say "fries". Alex loves chips with his burger.
+
+His sister Grace likes sweet food. She likes chocolate ice cream and chocolate cake. "Don't eat a lot of chocolate!" says Mum.`,q:[["What do people in America say?",["chips","fries","crisps"],1],["What does Grace like?",["sweet food","chips","eggs"],0],["What flavour is Grace's ice cream?",["lemon","banana","chocolate"],2]]},
+{w:"candy,sweets,pie,birthday,balloon",vi:"Tiệc sinh nhật",t:`It's Hugo's birthday party. There are red and blue balloons in the garden. Hugo's mum makes an apple pie.
+
+In England, people say "sweets". In America, they say "candy". Hugo has a big bag of sweets for his friends. Everyone is happy!`,q:[["Where are the balloons?",["in the kitchen","in the garden","in the bedroom"],1],["What does Mum make?",["a cake","an apple pie","a burger"],1],["Who are the sweets for?",["Hugo's friends","Hugo's mum","the dog"],0]]},
+{w:"kitchen,table,chair,cupboard,clock",vi:"Trong nhà bếp",t:`This is our kitchen. There is a big table and four chairs. The plates and cups are in the cupboard.
+
+On the wall there is a clock. It's eight o'clock. Mum is in the kitchen. She is making breakfast.`,q:[["How many chairs are there?",["three","four","five"],1],["Where are the plates and cups?",["on the table","in the cupboard","on the chair"],1],["Where is the clock?",["on the wall","on the table","in the cupboard"],0]]},
+{w:"bedroom,bed,sleep,lamp,night",vi:"Đi ngủ thôi",t:`It's nine o'clock at night. Ann is in her bedroom. She is in her bed with her teddy bear.
+
+There is a small lamp next to her bed. Mum reads a story. Then she turns off the lamp. "Good night, Ann. Sleep well!"`,q:[["What time is it?",["eight o'clock","nine o'clock","ten o'clock"],1],["What is next to the bed?",["a lamp","a clock","a box"],0],["Who reads a story?",["Dad","Ann","Mum"],2]]},
+{w:"bathroom,bath,mirror,mat,rug",vi:"Phòng tắm",t:`Our bathroom is small. There is a white bath and a big mirror. There is a blue mat in front of the bath.
+
+My dog likes the bathroom! He sleeps on the mat. In my bedroom there is a rug, but my dog doesn't like it.`,q:[["What colour is the bath?",["white","blue","pink"],0],["Where does the dog sleep?",["on the rug","on the mat","in the bath"],1],["Is there a rug in the bedroom?",["Yes","No"],0]]},
+{w:"living room,sofa,armchair,television,tv",vi:"Phòng khách",t:`In the evening, Bill's family is in the living room. Dad is sitting in the armchair. Bill and his sister are on the sofa.
+
+They are watching TV. "Can I turn off the television, please?" asks Mum. "It's time for bed!"`,q:[["Where is Dad sitting?",["on the sofa","in the armchair","on the floor"],1],["What are the children doing?",["reading","watching TV","sleeping"],1],["Why does Mum want to turn off the TV?",["It's time for bed.","It's time for school.","It's time for lunch."],0]]},
+{w:"dining room,hall,door,window,wall",vi:"Ngôi nhà mới",t:`Look at our new house! When you open the front door, you are in the hall. On the left is the dining room. We eat dinner there.
+
+The dining room has got a big window. The walls are yellow. I love our new house!`,q:[["Where are you when you open the front door?",["in the hall","in the kitchen","in the garden"],0],["What do they do in the dining room?",["sleep","eat dinner","watch TV"],1],["What colour are the walls?",["white","green","yellow"],2]]},
+{w:"flat,apartment,room,box,paper",vi:"Căn hộ của Eva",t:`Eva lives in a flat in the city. In America, they say "apartment". Eva's flat has got four rooms.
+
+In her room, Eva has got a big box. In the box there is a lot of paper. Eva likes drawing pictures on the paper.`,q:[["Where does Eva live?",["in a house","in a flat","on a farm"],1],["How many rooms are there?",["three","four","five"],1],["What is in the box?",["toys","paper","clothes"],1]]},
+{w:"desk,computer,phone,camera,picture",vi:"Bàn học của bố",t:`This is Dad's desk. There is a computer on it. Next to the computer there is a phone.
+
+Dad has got a camera too. He likes taking photos. On the wall above the desk there is a picture of our family.`,q:[["What is on Dad's desk?",["a computer","a TV","a radio"],0],["What does Dad like doing?",["taking photos","drawing","singing"],0],["Where is the family picture?",["on the desk","on the wall","in the box"],1]]},
+{w:"bookcase,book,read,story,radio",vi:"Giờ đọc sách",t:`In Sam's bedroom there is a bookcase. There are a lot of books in it.
+
+Sam loves reading. His favourite book is a story about a pirate. In the evening, his grandpa listens to music on the radio and Sam reads his book.`,q:[["Where are the books?",["on the bed","in the bookcase","under the desk"],1],["What is Sam's favourite story about?",["a pirate","a monkey","a robot"],0],["What does Grandpa listen to?",["the radio","a story","the TV"],0]]},
+{w:"toy,doll,teddy bear,robot,board game",vi:"Hộp đồ chơi",t:`Look in my toy box! I have got a doll with long hair. I have got a brown teddy bear too.
+
+My favourite toy is my robot. It can walk! On Saturdays, I play a board game with my family. It's very fun!`,q:[["What colour is the teddy bear?",["brown","white","black"],0],["What is my favourite toy?",["the doll","the robot","the teddy bear"],1],["When do I play a board game?",["on Mondays","on Saturdays","on Sundays"],1]]},
+{w:"car,bus,lorry,truck,motorbike",vi:"Trên đường phố",t:`Tom is waiting for the bus with his mum. He can see a red car and a blue motorbike.
+
+Then he sees a very big lorry. "In America, they say truck," says Mum. Here comes the bus! It's yellow.`,q:[["What colour is the car?",["red","blue","yellow"],0],["What do people in America say for lorry?",["truck","car","bus"],0],["What colour is the bus?",["blue","yellow","red"],1]]},
+{w:"plane,helicopter,ship,boat,train",vi:"Đi bằng gì?",t:`How do you go on holiday? Lucy goes by plane. Her friend Nick goes by train.
+
+Grace lives next to the sea. She goes on a big ship. Her dad has got a small boat too. Ben's uncle can fly a helicopter. Wow!`,q:[["How does Lucy go on holiday?",["by plane","by train","by ship"],0],["Who has got a small boat?",["Lucy's mum","Grace's dad","Ben's uncle"],1],["Who can fly a helicopter?",["Ben's uncle","Nick","Grace"],0]]},
+{w:"bike,ride,drive,go,street",vi:"Đi học bằng xe đạp",t:`Alex goes to school by bike. He rides his bike down the street. His bike is green.
+
+His sister can't ride a bike. She is only four! Their dad drives her to school in his car.`,q:[["How does Alex go to school?",["by car","by bike","by bus"],1],["What colour is his bike?",["green","red","blue"],0],["How old is his sister?",["four","five","six"],0]]},
+{w:"park,playground,tree,in,on",vi:"Ở công viên",t:`There is a big park next to Kim's house. In the park there is a playground. Kim likes playing there.
+
+Kim's cat is in a tree. It is sitting on a long branch. "Come down, Tiger!" says Kim. But Tiger doesn't want to come down!`,q:[["Where is the playground?",["in the park","in the garden","at school"],0],["Where is the cat?",["in a tree","on the bed","in the house"],0],["What is the cat's name?",["Kim","Tiger","Spot"],1]]},
+{w:"under,behind,between,in front of,here",vi:"Trốn tìm",t:`Ben and his friends are playing a game. Ben's sister is under the table. His friend Sam is behind the door.
+
+Anna is between the sofa and the armchair. Matt is in front of the window. "I can see you!" says Ben. "Come here!"`,q:[["Where is Ben's sister?",["under the table","behind the door","in front of the window"],0],["Who is behind the door?",["Anna","Sam","Matt"],1],["Where is Anna?",["between the sofa and the armchair","under the bed","in the garden"],0]]},
+{w:"there,shop,store,bookshop,end",vi:"Đi mua sắm",t:`Our street has got a lot of shops. In America, people say "store". There is a toy shop and a bookshop.
+
+The bookshop is at the end of the street. "Let's go there!" says Mum. I want a new book about animals.`,q:[["What do people in America say for shop?",["store","market","bookshop"],0],["Where is the bookshop?",["at the end of the street","next to the park","behind the school"],0],["What book do I want?",["a book about animals","a book about cars","a comic"],0]]},
+{w:"ball,kick,football,soccer,game",vi:"Đá bóng",t:`Nick loves football. In America, people call it soccer. Every afternoon, Nick plays in the park with his friends.
+
+Nick can kick the ball very far. Today they are playing a game. Nick's team wins!`,q:[["What do people in America call football?",["soccer","tennis","baseball"],0],["When does Nick play?",["every morning","every afternoon","every evening"],1],["Does Nick's team win?",["Yes","No"],0]]},
+{w:"basketball,baseball,bat,bounce,catch",vi:"Bóng rổ và bóng chày",t:`Grace plays basketball. She can bounce the ball and throw it very well.
+
+Her brother plays baseball. In baseball you hit the ball with a bat. Then you run! Grace's brother can catch the ball with one hand.`,q:[["What does Grace play?",["baseball","basketball","football"],1],["What do you hit the ball with in baseball?",["a bat","your hand","your foot"],0],["Grace's brother can catch the ball with one hand.",["Yes","No"],0]]},
+{w:"tennis,tennis racket,table tennis,badminton,hockey",vi:"Câu lạc bộ thể thao",t:`At the sports club you can play a lot of sports. Lily plays tennis. She has got a new tennis racket. It's pink!
+
+Her cousins play table tennis and badminton. Her dad plays hockey on Saturdays. What do you play?`,q:[["What does Lily play?",["tennis","hockey","badminton"],0],["What colour is her racket?",["pink","blue","red"],0],["When does Dad play hockey?",["on Saturdays","on Sundays","on Mondays"],0]]},
+{w:"run,jump,walk,swim,throw",vi:"Con vật làm được gì?",t:`Animals can do a lot of things. A horse can run very fast. A frog can jump. A fish can swim, but it can't walk!
+
+My dog can't throw a ball, but he can catch it. And I can throw the ball very far!`,q:[["What can a frog do?",["jump","fly","swim fast"],0],["Can a fish walk?",["Yes","No"],1],["Who can throw the ball?",["the dog","I","the horse"],1]]},
+{w:"beach,fishing,fly,kite,play",vi:"Cuối tuần ở biển",t:`On Sunday, Dan's family goes to the beach. Dan and his sister play with a kite. It's very windy, so the kite can fly very high.
+
+Dad goes fishing. He catches three big fish! "Fish for dinner tonight!" says Mum.`,q:[["When does the family go to the beach?",["on Saturday","on Sunday","on Monday"],1],["Why can the kite fly high?",["It's windy.","It's sunny.","It's raining."],0],["How many fish does Dad catch?",["two","three","four"],1]]},
+{w:"music,song,sing,listen,guitar",vi:"Lớp âm nhạc",t:`On Tuesdays, Sue has a music lesson. Her teacher plays the guitar. The children sing a song about animals.
+
+Sue loves singing. At home, she likes listening to music with her mum. Her favourite song is about the sea.`,q:[["When does Sue have a music lesson?",["on Mondays","on Tuesdays","on Fridays"],1],["What does the teacher play?",["the piano","the guitar","the drums"],1],["What is Sue's favourite song about?",["animals","the sea","the sun"],1]]},
+{w:"piano,hobby,favourite,enjoy,sport",vi:"Sở thích của bạn là gì?",t:`Everyone has a hobby. May's hobby is playing the piano. She enjoys it very much.
+
+Her brother doesn't like music. His favourite sport is swimming. He swims every day. What's your hobby?`,q:[["What is May's hobby?",["swimming","playing the piano","drawing"],1],["Does May enjoy it?",["Yes","No"],0],["What is her brother's favourite sport?",["tennis","football","swimming"],2]]},
+{w:"draw,drawing,photo,take a photo,skateboard",vi:"Bức vẽ và tấm ảnh",t:`Pat likes drawing. Today she wants to draw her brother on his skateboard. But he moves very fast!
+
+"I can't draw you!" says Pat. "Take a photo," says Mum. Pat takes a photo with Mum's phone. Now she can do her drawing!`,q:[["What is Pat's brother on?",["a bike","a skateboard","a horse"],1],["Why can't Pat draw him?",["He moves very fast.","He is sleeping.","He is at school."],0],["Pat takes a photo with Mum's phone.",["Yes","No"],0]]},
+{w:"skateboarding,watch,morning,afternoon,evening",vi:"Một ngày của Jill",t:`In the morning, Jill goes to school. In the afternoon, she goes skateboarding in the park with her friends.
+
+In the evening, she has dinner with her family. Then she watches TV for one hour. After that, she goes to bed.`,q:[["What does Jill do in the morning?",["goes to school","goes skateboarding","watches TV"],0],["Where does Jill go skateboarding?",["in the street","in the park","at school"],1],["How long does Jill watch TV?",["one hour","two hours","three hours"],0]]},
+{w:"day,today,year,watch,sun",vi:"Hôm nay là ngày đặc biệt",t:`Today is a special day. It's the first day of the new year! The sun is shining.
+
+Ann's grandpa gives her a new watch. "Now you can see the time every day," he says. "Thank you, Grandpa!" says Ann.`,q:[["What day is today?",["the first day of the new year","Ann's birthday","Sunday"],0],["What does Grandpa give Ann?",["a watch","a book","a doll"],0],["What is the weather like?",["The sun is shining.","It's raining.","It's snowing."],0]]}
+];
+
+</script>
+<script>
+(function(){
+"use strict";
+// ---------- data ----------
+const LV={S:{name:'Starters',full:'Pre A1 Starters',cefr:'Pre A1'},M:{name:'Movers',full:'A1 Movers',cefr:'A1'},F:{name:'Flyers',full:'A2 Flyers',cefr:'A2'}};
+const LVS=['S','M','F'];
+const TOPICS=[]; const WORDS=new Map(); const ORDER={S:[],M:[],F:[]};
+for(const [id,en,vi,icon,lv] of TOPICS_RAW){
+  const t={id,en,vi,icon,lv:{}};
+  for(const L of LVS){ if(!lv[L]) continue; t.lv[L]=[];
+    for(const it of lv[L].split(';')){ const [w,mean,em]=it.split('|'); const key=w.toLowerCase();
+      if(!WORDS.has(key)){ WORDS.set(key,{key,w,vi:mean,em:em||'',lv:L,topic:id}); ORDER[L].push(key); }
+      else { const o=WORDS.get(key); if(!o.em&&em) o.em=em; }
+      t.lv[L].push(key);
+    }
+  }
+  TOPICS.push(t);
+}
+const TOTAL=WORDS.size;
+const INT=[0,1,2,4,7,15,30];
+
+// ---------- storage ----------
+const store={get(k,d){try{const v=localStorage.getItem('rwq_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('rwq_'+k,JSON.stringify(v))}catch(e){}}};
+const S=Object.assign({srs:{},stars:0,streak:0,lastLesson:null,levels:['S'],perDay:10,rate:0.85,readDone:{},lessonDays:{},ai:[],done:{},gen:{}},store.get('state',{}));
+function save(){store.set('state',S);hdr()}
+function today(){const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/86400000)}
+function dateOf(n){return new Date(n*86400000+new Date().getTimezoneOffset()*60000)}
+
+// ---------- helpers ----------
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.random()*a.length|0];
+function box(k){return (S.srs[k]&&S.srs[k].b)||0}
+function status(k){const b=box(k);return b>=4?'m':b>=1?'l':''}
+function speakText(w){return w.replace(/\//g,', ').replace(/\ba\.m\./,'A M').replace(/\bp\.m\./,'P M')}
+function spellOf(w){const s=w.split('/')[0];return /^[a-z]{3,10}$/i.test(s)?s.toLowerCase():null}
+
+// ---------- speech & sound ----------
+let VOICE=null; const HAS_TTS='speechSynthesis' in window;
+function pickVoice(){ if(!HAS_TTS) return; const vs=speechSynthesis.getVoices(); VOICE=vs.find(v=>/en-GB/i.test(v.lang)&&/female|libby|sonia|serena|kate|google uk/i.test(v.name))||vs.find(v=>/en-GB/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null }
+if(HAS_TTS){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(text,rate,onend){ if(!HAS_TTS){onend&&onend();return} try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=VOICE?VOICE.lang:'en-GB';if(VOICE)u.voice=VOICE;u.rate=rate||S.rate;if(onend)u.onend=onend;speechSynthesis.speak(u)}catch(e){} }
+let AC=null;
+function tone(ok){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime;const notes=ok?[660,880]:[300,220];notes.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type=ok?'triangle':'sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,t+i*.12);g.gain.exponentialRampToValueAtTime(.25,t+i*.12+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.12+.2);o.connect(g).connect(AC.destination);o.start(t+i*.12);o.stop(t+i*.12+.22)})}catch(e){}}
+
+// ---------- header ----------
+function hdr(){ $('#stars').textContent=S.stars; const t=today(); $('#streak').textContent=(S.lastLesson===t||S.lastLesson===t-1)?S.streak:0 }
+
+// ---------- course: 5 words a day ----------
+const COURSE=[];
+LESSONS_S.forEach((l,i)=>COURSE.push({id:'S'+(i+1),lv:'S',n:i+1,w:l.w.split(','),vi:l.vi,t:l.t,q:l.q}));
+for(const L of ['M','F']){ const ks=ORDER[L]; for(let i=0;i<ks.length;i+=5) COURSE.push({id:L+(i/5+1),lv:L,n:i/5+1,w:ks.slice(i,i+5),vi:'',t:null,q:null}) }
+function course(){return COURSE.filter(c=>S.levels.includes(c.lv))}
+function withReading(les){ if(les.t) return les; const g=S.gen[les.id]; return g?Object.assign({},les,g):les }
+function nextLesson(){return course().find(x=>!S.done[x.id])||null}
+function doneToday(){const t=today();return course().filter(x=>S.done[x.id]&&S.done[x.id].day===t)}
+function dueKeys(){const t=today();return Object.keys(S.srs).filter(k=>WORDS.has(k)&&S.srs[k].b>0&&S.srs[k].due<=t).sort((a,b)=>S.srs[a].due-S.srs[b].due)}
+const PARTS=[['🧠','Học từ mới','Nghe, nhìn và nhớ 5 từ mới'],['✏️','Luyện từ vựng','Chọn nghĩa đúng và xếp chữ thành từ'],['🎧','Luyện nghe','Nghe từ và câu, chọn đáp án đúng'],['📖','Đọc hiểu','Đọc đoạn văn có 5 từ hôm nay và trả lời câu hỏi']];
+
+// ---------- router ----------
+let TAB='today';
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+function go(tab,arg){TAB=tab;document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===(tab==='topic'?'topics':tab==='passage'?'read':tab)?'page':'false'));closeSheet();window.scrollTo(0,0);({today:vToday,topics:vTopics,topic:vTopic,read:vRead,passage:vPassage,games:vGames,me:vMe})[tab](arg)}
+const V=()=>$('#view');
+
+// ---------- Today ----------
+function wordChips(keys){return `<div class="wchips">${keys.map(k=>{const w=WORDS.get(k);return `<span class="wchip"><span>${w.em||'🔤'}</span>${esc(w.w)}</span>`}).join('')}</div>`}
+function vToday(){
+  const t=today(), dt=doneToday(), nx=nextLesson(), due=dueKeys();
+  const days=['CN','T2','T3','T4','T5','T6','T7'];
+  let week='';for(let i=6;i>=0;i--){const d=t-i;const on=!!S.lessonDays[d];week+=`<div class="day ${on?'on':''} ${i===0?'today':''}"><i>${on?'⭐':''}</i><span>${i===0?'Nay':days[dateOf(d).getDay()]}</span></div>`}
+  const learned=[...WORDS.keys()].filter(k=>box(k)>=1).length, mastered=[...WORDS.keys()].filter(k=>box(k)>=4).length;
+  const dstr=dateOf(t).toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'numeric'});
+  const total=course().length, doneN=course().filter(x=>S.done[x.id]).length;
+  let main='';
+  if(dt.length){
+    const last=dt[dt.length-1];
+    main=`<div class="card lesson done"><div class="lesson-h"><span class="lv lv-${last.lv}">${LV[last.lv].name}</span><span class="muted">Bài ${last.n}</span></div>
+      <h2>Con đã học xong bài hôm nay! 🎉</h2>${wordChips(last.w)}
+      <div class="row"><button class="btn ghost small" id="again">Học lại bài này</button>${nx?`<button class="btn ghost small" id="goNext">Học trước bài ${nx.n}</button>`:''}</div></div>`;
+  } else if(nx){
+    main=`<div class="card lesson"><div class="lesson-h"><span class="lv lv-${nx.lv}">${LV[nx.lv].name}</span><span class="muted">Bài ${nx.n} / ${COURSE.filter(c=>c.lv===nx.lv).length}</span></div>
+      <h2>5 từ của hôm nay</h2>${wordChips(nx.w)}
+      <ol class="parts">${PARTS.map((p,i)=>`<li${i===3&&!withReading(nx).t&&!SAMPLE?' hidden':''}><span>${p[0]}</span>${p[1]}</li>`).join('')}</ol>
+      <button class="btn big" id="goNext">Bắt đầu học</button></div>`;
+  } else {
+    main=`<div class="card lesson"><h2>Con đã học hết ${total} bài! 🏆</h2><p class="muted" style="margin:0">Vào Tiến bộ → Cài đặt để chọn cấp độ tiếp theo.</p></div>`;
+  }
+  V().innerHTML=`
+  <div class="hello"><h1>Chào Ron! 👋</h1><p>${esc(dstr)} · Đã học ${doneN}/${total} bài</p></div>
+  ${main}
+  ${due.length?`<div class="card mission"><div class="ico">🔁</div><div class="txt"><h2>Ôn từ cũ</h2><p>${Math.min(due.length,10)} từ cần ôn lại hôm nay</p></div><button class="btn ghost" id="goRev">Ôn tập</button></div>`:''}
+  <div class="card"><div class="sec-h"><h2>7 ngày qua</h2><span class="muted">🔥 ${$('#streak').textContent} ngày liên tiếp</span></div><div class="week">${week}</div></div>
+  <div class="stats"><div class="stat"><b>${learned}</b><span>Từ đã học</span></div><div class="stat"><b>${mastered}</b><span>Đã thuộc</span></div><div class="stat"><b>${S.stars}</b><span>Ngôi sao</span></div></div>
+  ${HAS_TTS?'':'<div class="note">Trình duyệt này không đọc được tiếng Anh nên phần Luyện nghe sẽ bị bỏ qua. Hãy mở bằng Chrome hoặc Edge.</div>'}`;
+  const g=$('#goNext'); if(g) g.onclick=()=>startLesson(nx);
+  const a=$('#again'); if(a) a.onclick=()=>startLesson(dt[dt.length-1]);
+  const r=$('#goRev'); if(r) r.onclick=()=>runPractice(due.slice(0,10),{title:'Ôn từ cũ'});
+}
+
+// ---------- Topics ----------
+function vTopics(){
+  V().innerHTML=`<div class="sec-h"><h1 style="font-size:1.8rem">Chủ đề</h1><span class="muted">${TOPICS.length} chủ đề · ${TOTAL} từ</span></div>
+  <div class="topics">${TOPICS.map(t=>{const ks=[...new Set(LVS.flatMap(L=>t.lv[L]||[]))];const m=ks.filter(k=>box(k)>=1).length;return `<button class="topic" data-id="${t.id}"><span class="e">${t.icon}</span><b>${esc(t.vi)}</b><small>${esc(t.en)} · ${ks.length} từ</small><div class="bar"><i style="width:${Math.round(m/ks.length*100)}%"></i></div></button>`}).join('')}</div>`;
+  V().querySelectorAll('.topic').forEach(b=>b.onclick=()=>go('topic',{id:b.dataset.id}));
+}
+function vTopic(arg){
+  const t=TOPICS.find(x=>x.id===arg.id); const avail=LVS.filter(L=>t.lv[L]);
+  const L=arg.L&&t.lv[arg.L]?arg.L:(avail.find(x=>S.levels.includes(x))||avail[0]);
+  const ks=t.lv[L];
+  V().innerHTML=`<button class="back" id="bk">← Chủ đề</button>
+  <div class="sec-h"><h1 style="font-size:1.8rem">${t.icon} ${esc(t.vi)}</h1></div>
+  <div class="chips">${avail.map(x=>`<button class="chip" data-l="${x}" aria-pressed="${x===L}">${LV[x].name} · ${t.lv[x].length}</button>`).join('')}</div>
+  <div class="row"><button class="btn" id="prac">🎯 Luyện 5 từ</button><span class="muted" style="font-size:.9rem">● vàng: đang học · ● xanh: đã thuộc</span></div>
+  <div class="card wlist" style="gap:0;padding:6px 14px">${ks.map(k=>{const w=WORDS.get(k);return `<div class="wrow"><span class="e">${w.em||'🔤'}</span><div class="w"><b>${esc(w.w)}</b><div>${esc(w.vi)}</div></div><span class="dot ${status(k)}"></span><button class="spk" data-k="${esc(k)}" aria-label="Nghe">🔊</button></div>`}).join('')}</div>`;
+  $('#bk').onclick=()=>go('topics');
+  V().querySelectorAll('.chip').forEach(c=>c.onclick=()=>go('topic',{id:t.id,L:c.dataset.l}));
+  V().querySelectorAll('.spk').forEach(b=>b.onclick=()=>say(speakText(WORDS.get(b.dataset.k).w)));
+  $('#prac').onclick=()=>{ const unseen=ks.filter(k=>!S.srs[k]); const seen=shuffle(ks.filter(k=>S.srs[k])); runPractice([...unseen,...seen].slice(0,5),{title:t.vi,back:()=>go('topic',{id:t.id,L})}) };
+}
+
+// ---------- Lesson engine ----------
+function distractors(key,n,field,pool){
+  const w=WORDS.get(key); const t=TOPICS.find(x=>x.id===w.topic);
+  const same=[...new Set(LVS.flatMap(L=>t.lv[L]||[]))].filter(k=>k!==key);
+  const all=ORDER[w.lv].filter(k=>k!==key);
+  const out=[];const seenVal=new Set([field(w)]);
+  for(const k of [...(pool?shuffle(pool.filter(k=>k!==key)):[]),...shuffle(same),...shuffle(all)]){const v=field(WORDS.get(k));if(seenVal.has(v))continue;seenVal.add(v);out.push(k);if(out.length>=n)break}
+  return out;
+}
+function spread(arr){ for(let i=1;i<arr.length;i++) if(arr[i].key===arr[i-1].key){const j=arr.findIndex((e,x)=>x>i&&e.key!==arr[i].key);if(j>0)[arr[i],arr[j]]=[arr[j],arr[i]]} return arr }
+function sentencesOf(text){return text.replace(/\n+/g,' ').split(/(?<=[.!?]["”]?)\s+/).map(s=>s.trim()).filter(Boolean)}
+function findSentence(text,key){
+  const forms=WORDS.get(key).w.toLowerCase().split('/').map(f=>f.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  const re=new RegExp('\\b('+forms.join('|')+')(s|es)?\\b','i');
+  return sentencesOf(text).filter(s=>re.test(s)&&s.split(' ').length<=14)[0]||null;
+}
+let L_STATE=null;
+function openStage(state){ L_STATE=Object.assign({pos:0,wrong:new Set(),stars:0,retried:new Set()},state); const st=$('#stage'); st.hidden=false; document.body.style.overflow='hidden'; step() }
+async function startLesson(les){
+  les=withReading(les);
+  if(!les.t&&SAMPLE){ // Movers/Flyers: ask Claude to write the reading once, then keep it
+    openStage({queue:[{t:'loading'}],les,opts:{}});
+    const g=await genLessonReading(les).catch(()=>null);
+    if(g){ S.gen[les.id]=g; save(); les=Object.assign({},les,g) }
+  }
+  const ws=les.w; const q=[{t:'intro'}];
+  q.push({t:'section',i:0}); ws.forEach(k=>q.push({t:'card',key:k}));
+  q.push({t:'section',i:1});
+  let voc=ws.map(k=>({t:pick(['meaning','reverse']),key:k,pool:ws}));
+  voc=voc.concat(shuffle(ws.filter(k=>spellOf(WORDS.get(k).w))).slice(0,3).map(k=>({t:'spell',key:k})));
+  q.push(...spread(shuffle(voc)));
+  if(HAS_TTS){
+    q.push({t:'section',i:2});
+    let lis=ws.map(k=>({t:'listen',key:k,pool:ws}));
+    if(les.t) lis=lis.concat(shuffle(ws).map(k=>({t:'sent',key:k,sent:findSentence(les.t,k)})).filter(x=>x.sent).slice(0,3));
+    q.push(...spread(shuffle(lis)));
+  }
+  if(les.t){ q.push({t:'section',i:3}); q.push({t:'reading'}) }
+  openStage({queue:q,les,items:ws.map(k=>({key:k})),opts:{lesson:true}});
+}
+function runPractice(keys,opts){
+  if(!keys.length) return;
+  const q=[]; keys.filter(k=>!S.srs[k]).forEach(k=>q.push({t:'card',key:k}));
+  const types=k=>{const a=['meaning','reverse'];if(HAS_TTS)a.push('listen');if(spellOf(WORDS.get(k).w))a.push('spell');return a};
+  q.push(...spread(shuffle(keys.map(k=>({t:pick(types(k)),key:k,pool:keys})))));
+  openStage({queue:q,items:keys.map(k=>({key:k})),opts:opts||{}});
+}
+function closeStage(){ stopGame(); $('#stage').hidden=true; document.body.style.overflow=''; if(HAS_TTS) speechSynthesis.cancel() }
+function leave(){ const L=L_STATE; closeStage(); if(L.opts.back) L.opts.back(); else go(TAB==='topic'?'topics':TAB==='passage'?'read':TAB) }
+function stageShell(inner){
+  const L=L_STATE; const pct=Math.round(L.pos/L.queue.length*100);
+  $('#stage').innerHTML=`<div class="wrap stage-top"><button class="x" id="sx" aria-label="Thoát">✕</button><div class="prog"><i style="width:${pct}%"></i></div><span class="pill">⭐ ${L.stars}</span></div>
+  <div class="stage-body"><div class="wrap">${inner}</div></div><div id="fb"></div>`;
+  $('#sx').onclick=leave;
+}
+function step(){
+  const L=L_STATE; if(L.pos>=L.queue.length) return finish();
+  const it=L.queue[L.pos]; const w=it.key?WORDS.get(it.key):null;
+  ({loading:sLoading,intro:sIntro,section:sSection,card:sCard,listen:sListen,meaning:sMeaning,reverse:sReverse,spell:sSpell,sent:sSent,reading:sReading})[it.t](w,it);
+}
+function next(){L_STATE.pos++;step()}
+function bar(html,cls,btn,fn){ $('#fb').innerHTML=`<div class="feedback ${cls||''}"><div class="wrap"><div class="msg">${html}</div><button class="btn ${cls==='ok'?'good':''}" id="nx">${btn}</button></div></div>`; $('#nx').onclick=fn; $('#nx').focus() }
+function feedback(ok,w,it,extra){
+  const L=L_STATE;
+  if(ok){ L.stars++; tone(true) } else { tone(false); L.wrong.add(w.key);
+    if(!L.retried.has(it.key+it.t)){ L.retried.add(it.key+it.t); // try again later in the same part
+      let j=L.queue.findIndex((s,x)=>x>L.pos&&(s.t==='section'||s.t==='reading')); if(j<0) j=L.queue.length;
+      L.queue.splice(j,0,Object.assign({},it,{t:it.t==='spell'?'reverse':it.t})) } }
+  const praise=pick(['Đúng rồi! 🎉','Giỏi quá! 🌟','Tuyệt vời! 👏','Chính xác! ✨']);
+  bar(ok?praise+(extra?`<div class="sub">${extra}</div>`:''):`Đáp án: <b>${esc(w.w)}</b> = ${esc(w.vi)}${extra?`<div class="sub">${extra}</div>`:''}`,ok?'ok':'no','Tiếp →',next);
+  if(it.t!=='sent') say(speakText(w.w));
+}
+function sLoading(){ stageShell(`<div class="card finish" style="flex:1"><div class="trophy">✍️</div><h2>Đang chuẩn bị bài đọc…</h2><p class="muted" style="margin:0">Claude đang viết đoạn văn có 5 từ hôm nay.</p></div>`) }
+function sIntro(){
+  const L=L_STATE, les=L.les, hasRead=!!les.t;
+  stageShell(`<div class="card flash pop"><span class="tag"><span class="lv lv-${les.lv}">${LV[les.lv].name}</span> · Bài ${les.n}</span><h2 style="font-size:1.8rem">5 từ hôm nay</h2>${wordChips(les.w)}</div>
+  <ol class="parts big">${PARTS.map((p,i)=>(i===2&&!HAS_TTS)||(i===3&&!hasRead)?'':`<li><span>${p[0]}</span><div><b>${p[1]}</b><small>${p[2]}</small></div></li>`).join('')}</ol>`);
+  bar('Sẵn sàng chưa?','','Bắt đầu →',next);
+}
+function sSection(w,it){
+  const p=PARTS[it.i];
+  stageShell(`<div class="card finish pop" style="flex:1"><div class="trophy">${p[0]}</div><span class="tag">Phần ${PARTS.slice(0,it.i+1).filter((_,i)=>!(i===2&&!HAS_TTS)).length}</span><h2 style="font-size:2rem">${p[1]}</h2><p class="muted" style="margin:0;font-size:1.05rem">${p[2]}</p></div>`);
+  bar('','','Bắt đầu →',next);
+}
+function sCard(w){
+  stageShell(`<div class="prompt">Từ mới!</div>
+  <div class="card flash pop"><span class="tag"><span class="lv lv-${w.lv}">${LV[w.lv].name}</span></span><div class="big">${w.em||'🔤'}</div><div class="word">${esc(w.w)}</div><div class="vi">${esc(w.vi)}</div></div>
+  <button class="hear" id="hr" aria-label="Nghe lại">🔊</button>`);
+  $('#hr').onclick=()=>say(speakText(w.w)); setTimeout(()=>say(speakText(w.w)),250);
+  bar('<span class="muted">Nghe và đọc to theo nhé!</span>','','Đã nhớ →',next);
+}
+function choiceStep(w,it,promptHtml,optKeys,render,onPlay,extra){
+  stageShell(`${promptHtml}<div class="choices">${optKeys.map(k=>`<button class="choice" data-k="${esc(k)}">${render(WORDS.get(k))}</button>`).join('')}</div>`);
+  const play=onPlay||(()=>say(speakText(w.w)));
+  if(onPlay!==undefined||it.t==='listen') setTimeout(play,250);
+  const hr=$('#hr'); if(hr) hr.onclick=play;
+  const bs=[...$('#stage').querySelectorAll('.choice')];
+  bs.forEach(b=>b.onclick=()=>{ bs.forEach(x=>x.disabled=true); const ok=b.dataset.k===w.key; b.classList.add(ok?'ok':'no'); if(!ok) bs.find(x=>x.dataset.k===w.key).classList.add('ok'); feedback(ok,w,it,extra) });
+}
+function sListen(w,it){
+  const opts=shuffle([w.key,...distractors(w.key,3,x=>x.vi,it.pool)]);
+  choiceStep(w,it,`<div class="prompt">Nghe và chọn hình đúng</div><button class="hear" id="hr" aria-label="Nghe">🔊</button>`,opts,x=>`${x.em?`<span class="ce">${x.em}</span>`:''}<span class="${x.em?'cv':''}">${esc(x.vi)}</span>`);
+}
+function sSent(w,it){
+  const low=it.sent.toLowerCase(); const inSent=k=>WORDS.get(k).w.toLowerCase().split('/').some(f=>new RegExp('\\b'+f.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(s|es)?\\b').test(low));
+  const opts=shuffle([w.key,...distractors(w.key,10,x=>x.w.toLowerCase()).filter(k=>!inSent(k)).slice(0,3)]);
+  const play=()=>say(it.sent,S.rate*0.9);
+  choiceStep(w,it,`<div class="prompt">Nghe câu. Con nghe thấy từ nào?</div><button class="hear" id="hr" aria-label="Nghe câu">🔊</button><p class="muted" style="text-align:center;margin:0">Bấm loa để nghe lại</p>`,opts,x=>`${x.em?`<span class="ce">${x.em}</span>`:''}<span>${esc(x.w)}</span>`,play,`“${esc(it.sent)}”`);
+}
+function sMeaning(w,it){
+  const opts=shuffle([w.key,...distractors(w.key,3,x=>x.vi,it.pool)]);
+  choiceStep(w,it,`<div class="prompt">Từ này nghĩa là gì?</div><div class="card flash" style="padding:18px"><div class="word">${esc(w.w)}</div><button class="spk" id="hr" style="margin:0 auto" aria-label="Nghe">🔊</button></div>`,opts,x=>`<span>${esc(x.vi)}</span>`);
+}
+function sReverse(w,it){
+  const opts=shuffle([w.key,...distractors(w.key,3,x=>x.w.toLowerCase(),it.pool)]);
+  choiceStep(w,it,`<div class="prompt">Chọn từ tiếng Anh đúng</div><div class="card flash" style="padding:18px">${w.em?`<div class="big" style="font-size:3.6rem">${w.em}</div>`:''}<div class="vi" style="color:var(--ink);font-size:1.5rem">${esc(w.vi)}</div></div>`,opts,x=>`<span>${esc(x.w)}</span>`);
+}
+function sSpell(w,it){
+  const target=spellOf(w.w); const abc='abcdefghijklmnopqrstuvwxyz';
+  const letters=shuffle([...target,...Array.from({length:target.length>7?1:2},()=>pick(abc))]);
+  let typed=[];
+  stageShell(`<div class="prompt">Xếp chữ thành từ</div>
+  <div class="card flash" style="padding:16px">${w.em?`<div class="big" style="font-size:3.4rem">${w.em}</div>`:''}<div class="vi" style="color:var(--ink)">${esc(w.vi)}</div>${HAS_TTS?'<button class="spk" id="hr" style="margin:4px auto 0" aria-label="Nghe">🔊</button>':''}</div>
+  <div class="slots" id="slots">${[...target].map(()=>'<span class="slot"></span>').join('')}</div>
+  <div class="tiles" id="tiles">${letters.map((c,i)=>`<button class="tile" data-i="${i}">${c}</button>`).join('')}</div>
+  <div class="row" style="justify-content:center"><button class="btn ghost small" id="del">⌫ Xóa</button><button class="btn ghost small" id="hint">💡 Gợi ý</button></div>`);
+  const hr=$('#hr'); if(hr) hr.onclick=()=>say(speakText(w.w));
+  const slots=[...$('#slots').children], tiles=[...$('#tiles').children];
+  const draw=()=>slots.forEach((s,i)=>s.textContent=typed[i]?typed[i].c:'');
+  const check=()=>{ const ok=typed.map(x=>x.c).join('')===target; tiles.forEach(t=>t.disabled=true); $('#del').disabled=true;$('#hint').disabled=true; slots.forEach((s,i)=>{s.classList.add(ok?'ok':'no'); if(!ok) s.textContent=target[i]}); feedback(ok,w,it) };
+  tiles.forEach(t=>t.onclick=()=>{ if(typed.length>=target.length) return; typed.push({c:t.textContent,i:+t.dataset.i}); t.disabled=true; draw(); if(typed.length===target.length) check() });
+  $('#del').onclick=()=>{ const x=typed.pop(); if(x) tiles[x.i].disabled=false; draw() };
+  $('#hint').onclick=()=>{ while(typed.length && typed.map(x=>x.c).join('')!==target.slice(0,typed.length)){const x=typed.pop();tiles[x.i].disabled=false}
+    const need=target[typed.length]; const t=tiles.find(t=>!t.disabled&&t.textContent===need); if(t) t.click(); };
+}
+function sReading(){
+  const L=L_STATE, les=L.les;
+  stageShell(`<div class="card"><h2 style="font-size:1.5rem">${esc(les.vi||'Đọc hiểu')}</h2>
+    <div class="row">${HAS_TTS?'<button class="btn ghost small" id="readAll">🔊 Nghe cả đoạn</button>':''}<span class="muted" style="font-size:.88rem">5 từ hôm nay được tô đậm. Chạm vào từ để xem nghĩa.</span></div>
+    <div class="passage">${markup(les.t,les.w)}</div></div>
+  <div class="card"><h2>Trả lời câu hỏi</h2>${les.q.map((q,i)=>`<div class="q" data-i="${i}"><b>${i+1}. ${esc(q[0])}</b><div class="opts">${q[1].map((o,j)=>`<button class="opt" data-j="${j}" aria-pressed="false">${esc(o)}</button>`).join('')}</div></div>`).join('')}</div>`);
+  $('#stage').querySelectorAll('.vw').forEach(s=>s.onclick=()=>showWord(s.dataset.k));
+  const ra=$('#readAll'); if(ra){ let on=false; ra.onclick=()=>{ if(on){speechSynthesis.cancel();on=false;ra.textContent='🔊 Nghe cả đoạn';return} on=true;ra.textContent='⏹ Dừng'; say(les.t.replace(/\n+/g,' '),S.rate*0.9,()=>{on=false;ra.textContent='🔊 Nghe cả đoạn'}) } }
+  const ans=new Array(les.q.length).fill(null); let checked=false;
+  $('#stage').querySelectorAll('.q').forEach(qd=>{ const i=+qd.dataset.i; qd.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{ if(checked) return; ans[i]=+o.dataset.j; qd.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===o)); $('#nx').disabled=ans.includes(null) }) });
+  bar('<span class="muted">Chọn đáp án cho mọi câu hỏi</span>','','Kiểm tra',()=>{
+    if(checked){ closeSheet(); next(); return }
+    checked=true; let sc=0;
+    $('#stage').querySelectorAll('.q').forEach(qd=>{ const i=+qd.dataset.i, c=les.q[i][2]; qd.querySelectorAll('.opt').forEach(o=>{const j=+o.dataset.j; if(j===c) o.classList.add('ok'); else if(j===ans[i]) o.classList.add('no')}); if(ans[i]===c) sc++ });
+    tone(sc>=les.q.length/2); L.stars+=sc; L.readScore=sc;
+    const fb=$('#fb .feedback'); fb.className='feedback '+(sc===les.q.length?'ok':sc?'':'no');
+    $('#fb .msg').innerHTML=`Đúng ${sc}/${les.q.length} câu ${sc===les.q.length?'🏆':sc>=les.q.length/2?'👍':'💪'}`;
+    $('#nx').textContent='Hoàn thành →';
+  });
+  $('#nx').disabled=true;
+}
+function finish(){
+  const L=L_STATE, t=today();
+  for(const it of (L.items||[])){ const k=it.key; const r=S.srs[k]||{b:0,due:t}; const ok=!L.wrong.has(k);
+    r.b=ok?Math.min(6,(r.b||0)+1):1; r.due=t+INT[r.b]; r.last=t; S.srs[k]=r }
+  S.stars+=L.stars;
+  if(L.opts.lesson){ const first=!S.done[L.les.id]; S.done[L.les.id]={day:first?t:S.done[L.les.id].day,stars:L.stars,read:L.readScore};
+    if(!S.lessonDays[t]){ S.streak=(S.lastLesson===t-1)?S.streak+1:(S.lastLesson===t?S.streak:1); S.lastLesson=t } S.lessonDays[t]=true }
+  save();
+  const items=L.items||[]; const okCount=items.filter(i=>!L.wrong.has(i.key)).length;
+  stageShell(`<div class="card finish pop" style="flex:1"><div class="trophy">${okCount===items.length?'🏆':'🎖️'}</div><h2 style="font-size:2rem">Hoàn thành!</h2>
+  <p style="font-size:1.15rem;margin:0">Con được <b>+${L.stars} ⭐</b></p><p class="muted" style="margin:0">Nhớ đúng ${okCount}/${items.length} từ ngay lần đầu</p>${L.opts.lesson?`<button class="btn big" id="playG" style="margin-top:8px">🎮 Chơi game thưởng</button>`:''}
+  ${L.wrong.size?`<p class="muted" style="margin:0">Cần ôn thêm: ${[...L.wrong].map(k=>`<b>${esc(WORDS.get(k).w)}</b>`).join(', ')}</p>`:''}</div>`);
+  $('.prog i').style.width='100%';
+  bar(L.opts.lesson?'Hẹn gặp lại ngày mai!':'Làm tốt lắm!','ok','Xong',leave);
+  const pg=$('#playG'); if(pg) pg.onclick=()=>{ TAB='today'; openGames(L.les.w,true) };
+}
+async function genLessonReading(les){
+  const words=les.w.map(k=>WORDS.get(k).w.split('/')[0]);
+  const g={M:'past simple, comparatives, must, going to; short sentences',F:'present perfect, past continuous, will, might'}[les.lv]||'present simple, can, have got';
+  const prompt=`Write a very short, cheerful reading passage (50-80 words, 2 short paragraphs) for a 9-year-old Vietnamese child in grade 4 learning English for the Cambridge ${LV[les.lv].full} exam (CEFR ${LV[les.lv].cefr}).
+It MUST use ALL of these 5 words: ${words.join(', ')}.
+Keep grammar at ${LV[les.lv].cefr} level (${g}). Other words should be easy words from the Cambridge Starters/Movers word lists.
+Then write 3 multiple-choice questions (3 options, or Yes/No) whose answers are clearly in the text.
+Reply with ONLY JSON: {"vi":"short Vietnamese title","text":"paragraph 1\\n\\nparagraph 2","qs":[{"q":"question","options":["a","b","c"],"answer":0}]}`;
+  const d=await SAMPLE.json(prompt,{cache:false});
+  if(!d||typeof d.text!=='string'||!Array.isArray(d.qs)) return null;
+  const q=d.qs.filter(x=>x&&x.q&&Array.isArray(x.options)&&x.options.length>=2).slice(0,4).map(x=>[String(x.q),x.options.map(String),Math.max(0,Math.min(x.options.length-1,Number(x.answer)||0))]);
+  return q.length?{t:d.text,q,vi:String(d.vi||'Đọc hiểu')}:null;
+}
+
+function todayReading(){
+  const pool=READINGS.map((r,i)=>({...r,id:'r'+i})).filter(r=>S.levels.includes(r.lv));
+  if(!pool.length) return null;
+  const t=today(); const notDone=pool.filter(r=>!(r.id in S.readDone));
+  const list=notDone.length?notDone:pool;
+  return list[t%list.length];
+}
+
+// ---------- Reading ----------
+const STOP=new Set(['in','on','here','there','after','before','end','go','fine','every','past','over','way','right','left','front','time','day','fall','back','cut','matter','fly','play','old','young','live','eat','drink','may','wear','second','first','one','two','three','past','later','fair','thin','fat','ring','spot','step','fish','watch','run','swim','walk','read','ride','sing','draw','kick','jump','catch','throw','listen','enjoy','meet','join','collect','taste','smell','sleep','dream','wash','cook','work','text','score','skip','hop','skate','sail','dance','cry','cough','brush','swing','drive']);
+let FORMS=null;
+function buildForms(){ FORMS=new Map(); for(const w of WORDS.values()){ for(const f of w.w.toLowerCase().split('/')){ if(!FORMS.has(f)) FORMS.set(f,w.key) } } }
+function lookup(tok){ const t=tok.toLowerCase(); if(STOP.has(t)) return null; const tries=[t,t.replace(/'s$/,''),t.replace(/s$/,''),t.replace(/es$/,''),t.replace(/ies$/,'y'),t.replace(/ves$/,'f'),t.replace(/ves$/,'fe')]; for(const x of tries){ if(x.length>1&&FORMS.has(x)&&!STOP.has(x)) return FORMS.get(x) } return null }
+function markup(text,hk){
+  const H=new Set(hk||[]); const span=(k,txt)=>`<span class="vw${H.has(k)?' hl':''}" data-k="${esc(k)}">${esc(txt)}</span>`;
+  if(!FORMS) buildForms();
+  return text.split(/\n\s*\n/).map(par=>{
+    const toks=par.split(/(\s+)/); let out='';
+    for(let i=0;i<toks.length;i++){
+      const tk=toks[i]; if(/^\s+$/.test(tk)||!tk){out+=tk;continue}
+      // try 3- and 2-word phrases
+      let done=false;
+      for(const n of [3,2]){ const parts=[];let j=i,cnt=0;while(j<toks.length&&cnt<n){if(!/^\s+$/.test(toks[j])){parts.push(toks[j]);cnt++}j++}
+        if(cnt<n) continue; const raw=parts.join(' '); const m=raw.match(/^([^A-Za-z]*)([A-Za-z][A-Za-z' -]*[A-Za-z])([^A-Za-z]*)$/); if(!m) continue;
+        const key=FORMS.get(m[2].toLowerCase())||FORMS.get(m[2].toLowerCase().replace(/s$/,''));
+        if(key&&m[2].includes(' ')){ out+=esc(m[1])+span(key,m[2])+esc(m[3]); i=j-1; done=true; break }
+      }
+      if(done) continue;
+      const m=tk.match(/^([^A-Za-z]*)([A-Za-z][A-Za-z'.-]*[A-Za-z]|[A-Za-z])([^A-Za-z]*)$/);
+      if(m){ const key=lookup(m[2].replace(/[.]$/,'')); let k2=key; if(!k2&&H.size){const lw=m[2].toLowerCase();for(const h of H){const fs=WORDS.get(h).w.toLowerCase().split('/');if(fs.some(f=>lw===f||lw===f+'s'||lw===f+'es'||lw===f.replace(/y$/,'ies'))){k2=h;break}}}
+        out+= k2? esc(m[1])+span(k2,m[2])+esc(m[3]) : esc(tk) } else out+=esc(tk);
+    }
+    return `<p>${out}</p>`;
+  }).join('');
+}
+function allReadings(){ const les=COURSE.filter(c=>S.done[c.id]).map(c=>withReading(c)).filter(c=>c.t).map(c=>({id:'L'+c.id,lv:c.lv,title:`Bài ${c.n}: ${c.vi}`,vi:'Từ: '+c.w.map(k=>WORDS.get(k).w).join(', '),text:c.t,qs:c.q,hk:c.w})); return [...les.reverse(),...READINGS.map((r,i)=>({...r,id:'r'+i})),...S.ai] }
+let RLV=null;
+function vRead(){
+  if(!RLV||!S.levels.includes(RLV)) RLV=S.levels[0];
+  const list=allReadings().filter(r=>r.lv===RLV);
+  const tr=todayReading();
+  V().innerHTML=`<div class="sec-h"><h1 style="font-size:1.8rem">Bài đọc</h1><span class="muted">${list.length} bài</span></div>
+  <div class="chips">${S.levels.map(L=>`<button class="chip" data-l="${L}" aria-pressed="${L===RLV}">${LV[L].name}</button>`).join('')}</div>
+  <div class="card" id="aiBox" hidden><div class="sec-h"><h2>✨ Bài đọc mới mỗi ngày</h2></div>
+    <p class="muted" style="margin:0">Claude viết một bài đọc mới cấp ${LV[RLV].name}, dùng các từ con đang học.</p>
+    <div class="row"><button class="btn" id="aiGo">Tạo bài đọc mới</button><button class="btn ghost small" id="aiStop" hidden>Dừng</button></div><div id="aiMsg" class="muted"></div></div>
+  <div class="rlist">${list.map(r=>{const sc=S.readDone[r.id];return `<button class="ritem" data-id="${esc(r.id)}"><span style="font-size:1.8rem">${r.id.startsWith('ai')?'✨':r.id.startsWith('L')?'🧠':tr&&tr.id===r.id?'📌':'📄'}</span><span class="t"><b>${esc(r.title)}</b><small>${esc(r.vi||'')}${tr&&tr.id===r.id?' · Bài của hôm nay':''}</small></span>${sc!=null?`<span class="score">${sc}/${r.qs.length}</span>`:''}</button>`}).join('')}</div>`;
+  V().querySelectorAll('.chip').forEach(c=>c.onclick=()=>{RLV=c.dataset.l;vRead()});
+  V().querySelectorAll('.ritem').forEach(b=>b.onclick=()=>go('passage',b.dataset.id));
+  setupAI();
+}
+function vPassage(id){
+  const r=allReadings().find(x=>x.id===id); if(!r){go('read');return}
+  const prev=S.readDone[id];
+  V().innerHTML=`<button class="back" id="bk">← Bài đọc</button>
+  <div class="card"><div class="row"><span class="lv lv-${r.lv}">${LV[r.lv].name}</span>${prev!=null?`<span class="score">Lần trước: ${prev}/${r.qs.length}</span>`:''}</div>
+    <h1 style="font-size:1.9rem">${esc(r.title)}</h1>${r.vi?`<p class="muted" style="margin:-6px 0 0">${esc(r.vi)}</p>`:''}
+    <div class="row">${HAS_TTS?'<button class="btn ghost small" id="readAll">🔊 Nghe cả bài</button>':''}<span class="muted" style="font-size:.9rem">Chạm vào từ được tô để xem nghĩa</span></div>
+    <div class="passage">${markup(r.text,r.hk)}</div></div>
+  <div class="card"><h2>Trả lời câu hỏi</h2>${r.qs.map((q,i)=>`<div class="q" data-i="${i}"><b>${i+1}. ${esc(q[0])}</b><div class="opts">${q[1].map((o,j)=>`<button class="opt" data-j="${j}" aria-pressed="false">${esc(o)}</button>`).join('')}</div></div>`).join('')}
+  <div class="row"><button class="btn" id="chk" disabled>Kiểm tra</button><span id="res" class="score"></span></div></div>`;
+  $('#bk').onclick=()=>go('read');
+  V().querySelectorAll('.vw').forEach(s=>s.onclick=()=>showWord(s.dataset.k));
+  const ra=$('#readAll'); if(ra){ let on=false; ra.onclick=()=>{ if(on){speechSynthesis.cancel();on=false;ra.textContent='🔊 Nghe cả bài';return} on=true;ra.textContent='⏹ Dừng đọc'; say(r.text.replace(/\n+/g,' '),S.rate*0.95,()=>{on=false;ra.textContent='🔊 Nghe cả bài'}) } }
+  const ans=new Array(r.qs.length).fill(null); let checked=false;
+  V().querySelectorAll('.q').forEach(qd=>{ const i=+qd.dataset.i; qd.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{ if(checked) return; ans[i]=+o.dataset.j; qd.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===o)); $('#chk').disabled=ans.includes(null) }) });
+  $('#chk').onclick=()=>{
+    if(checked){ go('passage',id); return }
+    checked=true; let sc=0;
+    V().querySelectorAll('.q').forEach(qd=>{ const i=+qd.dataset.i, c=r.qs[i][2]; qd.querySelectorAll('.opt').forEach(o=>{const j=+o.dataset.j; if(j===c) o.classList.add('ok'); else if(j===ans[i]) o.classList.add('no')}); if(ans[i]===c) sc++ });
+    tone(sc>=r.qs.length/2);
+    const first=S.readDone[id]==null; S.readDone[id]=sc; S.readDone[id+'_day']=today(); if(first) S.stars+=sc*2; save();
+    $('#res').textContent=`${sc}/${r.qs.length} câu đúng ${sc===r.qs.length?'🏆':sc>=r.qs.length/2?'👍':'💪'}${first?` · +${sc*2} ⭐`:''}`;
+    $('#chk').textContent='Làm lại';
+  };
+}
+function showWord(k){
+  const w=WORDS.get(k); if(!w) return; say(speakText(w.w));
+  const sh=$('#sheet'); sh.hidden=false;
+  sh.innerHTML=`<div class="wrap"><span class="e">${w.em||'🔤'}</span><div class="t"><b>${esc(w.w)}</b><span class="muted">${esc(w.vi)} · <span class="lv lv-${w.lv}">${LV[w.lv].name}</span></span></div><button class="spk" id="shs" aria-label="Nghe">🔊</button><button class="x" id="shx" aria-label="Đóng">✕</button></div>`;
+  $('#shs').onclick=()=>say(speakText(w.w)); $('#shx').onclick=closeSheet;
+}
+function closeSheet(){ $('#sheet').hidden=true }
+document.addEventListener('click',e=>{ if($('#sheet').hidden) return; if(e.target.closest('#sheet')||e.target.closest('.vw')) return; closeSheet() },true);
+
+// ---------- AI reading (Claude sample capability, when available) ----------
+let SAMPLE=null, aiCtl=null;
+if(window.claude&&window.claude.use){ window.claude.use('sample').then(s=>{SAMPLE=s; if(TAB==='read') setupAI(); if(TAB==='today'&&$('#stage').hidden) vToday()}).catch(()=>{}) }
+function setupAI(){
+  const box=$('#aiBox'); if(!box||!SAMPLE) return; box.hidden=false;
+  $('#aiGo').onclick=genReading; $('#aiStop').onclick=()=>aiCtl&&aiCtl.abort();
+}
+async function genReading(){
+  const L=RLV; const lvKeys=ORDER[L];
+  let target=lvKeys.filter(k=>{const b=box(k);return b>=1&&b<=3});
+  target=shuffle(target).slice(0,10); if(target.length<8) target=[...target,...shuffle(lvKeys.filter(k=>!target.includes(k))).slice(0,10-target.length)];
+  const words=target.map(k=>WORDS.get(k).w.split('/')[0]);
+  const spec={S:{len:'70-100',q:4,grammar:'present simple, present continuous, can, have got; very short sentences',kind:'Yes/No or 3 options'},M:{len:'110-150',q:5,grammar:'past simple, comparatives, must, going to; short sentences',kind:'3 options or True/False'},F:{len:'150-200',q:5,grammar:'present perfect, past continuous, will, might, relative clauses',kind:'3 options or True/False'}}[L];
+  const names='Alex, Anna, Ben, Grace, Hugo, Kim, Lucy, Sam, Tom, Daisy, Fred, Jack, Lily, Mary, Paul, Zoe, Emma, George, Harry, Holly, Katy, Oliver, Sophia, William, Ron';
+  const prompt=`Write a fun, original reading passage for a 9-year-old Vietnamese boy named Ron who is learning English for the Cambridge ${LV[L].full} exam (CEFR ${LV[L].cefr}).
+Rules:
+- Length: ${spec.len} words, split into 2-4 short paragraphs.
+- Grammar must stay at ${LV[L].cefr} level: ${spec.grammar}.
+- Use as many of these target words as naturally possible: ${words.join(', ')}.
+- Other words should be common words from the Cambridge ${LV[L].name} word list. Characters can use names like: ${names}.
+- Topic should be cheerful and interesting for a child (animals, adventures, school, family, sports, space, dinosaurs...).
+- Then write ${spec.q} reading comprehension questions (${spec.kind}). The answer must be clearly found in the text.
+Reply with ONLY a JSON object in this exact shape:
+{"title":"English title","vi":"Vietnamese translation of the title","text":"paragraph 1\\n\\nparagraph 2","qs":[{"q":"question","options":["option A","option B","option C"],"answer":0}]}
+"answer" is the 0-based index of the correct option.`;
+  const msg=$('#aiMsg'), go1=$('#aiGo'), stop=$('#aiStop');
+  go1.disabled=true; stop.hidden=false; msg.textContent='Claude đang viết bài… (có thể mất khoảng 30 giây)';
+  aiCtl=new AbortController();
+  try{
+    const d=await SAMPLE.json(prompt,{signal:aiCtl.signal,cache:false});
+    if(!d||typeof d.text!=='string'||!Array.isArray(d.qs)||!d.qs.length) throw {code:'invalid_json'};
+    const qs=d.qs.filter(q=>q&&q.q&&Array.isArray(q.options)&&q.options.length>=2).map(q=>[String(q.q),q.options.map(String),Math.max(0,Math.min(q.options.length-1,Number(q.answer)||0))]);
+    const r={id:'ai'+Date.now(),lv:L,title:String(d.title||'New story'),vi:String(d.vi||''),text:d.text,qs};
+    S.ai.unshift(r); if(S.ai.length>60) S.ai.length=60; save();
+    go('passage',r.id);
+  }catch(e){
+    const c=e&&e.code; go1.disabled=false; stop.hidden=true;
+    if(c==='cancelled') msg.textContent='';
+    else if(c==='not_granted'||c==='sampling_disabled'||c==='not_declared'||c==='capability_disabled'){ $('#aiBox').hidden=true; SAMPLE=null }
+    else if(c==='rate_limited') msg.textContent='Đã tạo nhiều bài quá, thử lại sau ít phút nhé.';
+    else msg.textContent='Chưa tạo được bài. Bấm thử lại nhé.';
+  }
+}
+
+// ---------- Mini games ----------
+const GAMES=[
+  {id:'balloon',icon:'🎈',name:'Bắn bóng bay',desc:'Nghe từ, chạm vào bóng bay đúng trước khi nó bay mất',fn:gBalloon},
+  {id:'memory',icon:'🃏',name:'Lật thẻ ghép đôi',desc:'Tìm cặp thẻ: hình và từ tiếng Anh',fn:gMemory},
+  {id:'detective',icon:'🕵️',name:'Thám tử chữ cái',desc:'Đoán từng chữ cái để tìm ra từ bí mật',fn:gDetective}
+];
+let GAME_RAF=0, G_CTX=null;
+function stopGame(){ if(GAME_RAF) cancelAnimationFrame(GAME_RAF); GAME_RAF=0 }
+function gameWords(src){
+  if(Array.isArray(src)) return src;
+  const dt=doneToday(), nx=nextLesson();
+  const todayKeys=dt.length?dt[dt.length-1].w:(nx?nx.w:ORDER.S.slice(0,5));
+  if(src==='learned'){ const l=shuffle(Object.keys(S.srs).filter(k=>WORDS.has(k)&&box(k)>=1)); return l.length>=5?l.slice(0,6):todayKeys }
+  return todayKeys;
+}
+function gameShell(title,inner){
+  stopGame();
+  $('#stage').innerHTML=`<div class="wrap stage-top"><button class="x" id="sx" aria-label="Thoát">✕</button><div class="gtitle">${title}</div><span class="pill">⭐ ${S.stars}</span></div>
+  <div class="stage-body"><div class="wrap">${inner}</div></div><div id="fb"></div>`;
+  $('#sx').onclick=()=>{ stopGame(); if(G_CTX.fromLesson) openGames(G_CTX.keys,true); else { closeStage(); go('games') } };
+}
+function openGames(keys,fromLesson){
+  G_CTX={keys,fromLesson};
+  const st=$('#stage'); st.hidden=false; document.body.style.overflow='hidden';
+  stopGame();
+  $('#stage').innerHTML=`<div class="wrap stage-top"><button class="x" id="sx" aria-label="Thoát">✕</button><div class="gtitle">🎮 Game thưởng</div><span class="pill">⭐ ${S.stars}</span></div>
+  <div class="stage-body"><div class="wrap"><p class="muted" style="margin:0;text-align:center">Chơi với các từ:</p>${wordChips(keys)}
+  <div class="gcards">${GAMES.map(g=>`<button class="gcard" data-g="${g.id}"><span class="gi">${g.icon}</span><span><b>${g.name}</b><small>${g.desc}</small></span></button>`).join('')}</div></div></div><div id="fb"></div>`;
+  $('#sx').onclick=()=>{ closeStage(); go(fromLesson?'today':'games') };
+  $('#stage').querySelectorAll('.gcard').forEach(b=>b.onclick=()=>GAMES.find(g=>g.id===b.dataset.g).fn(keys));
+}
+function gameOver(icon,title,line,earned,replay){
+  if(earned){ S.stars+=earned; save() }
+  $('#stage .stage-body .wrap').innerHTML=`<div class="card finish pop" style="flex:1"><div class="trophy">${icon}</div><h2 style="font-size:2rem">${title}</h2><p style="margin:0;font-size:1.1rem">${line}</p>${earned?`<p style="margin:0;font-size:1.15rem">Con được <b>+${earned} ⭐</b></p>`:''}</div>`;
+  $('#fb').innerHTML=`<div class="feedback ok"><div class="wrap"><button class="btn ghost" id="gOther">Game khác</button><span style="flex:1"></span><button class="btn good" id="gAgain">Chơi lại</button></div></div>`;
+  $('#gAgain').onclick=replay; $('#gOther').onclick=()=>openGames(G_CTX.keys,G_CTX.fromLesson);
+}
+
+// 1) Balloon pop — listening
+function gBalloon(keys){
+  const GOAL=10; let score=0,hearts=3,target=null,balls=[],spawnT=.3,last=0,over=false,sinceTarget=0;
+  gameShell('🎈 Bắn bóng bay',`<div class="ghud"><span id="gh">❤️❤️❤️</span><button class="btn ghost small" id="gsay">🔊 Nghe lại</button><span class="pill" id="gs">0/${GOAL}</span></div>
+  <div class="gprompt" id="gp"></div><div class="arena" id="arena"></div>`);
+  const arena=$('#arena'), gp=$('#gp');
+  const colors=['--b1','--b2','--b3','--b4','--b5'];
+  const sayT=()=>{ const w=WORDS.get(target); if(HAS_TTS) say(speakText(w.w)) };
+  function newTarget(){ const prev=target; const pool=keys.filter(k=>k!==prev); target=pick(pool.length?pool:keys); sinceTarget=0;
+    const w=WORDS.get(target); gp.innerHTML=HAS_TTS?'Con nghe thấy từ gì? Chạm vào bóng bay đúng!':`Tìm bóng bay: <b>${esc(w.vi)}</b>`; sayT(); spawnT=Math.min(spawnT,.4) }
+  function spawn(){
+    const W=arena.clientWidth, H=arena.clientHeight; const k=(sinceTarget>=2||Math.random()<.4)?target:pick(keys); if(k===target) sinceTarget=0; else sinceTarget++;
+    const w=WORDS.get(k); const el=document.createElement('button'); el.className='balloon';
+    el.style.setProperty('--bc',`var(${pick(colors)})`); el.innerHTML=`<span class="be">${w.em||'❓'}</span><span class="bw">${esc(w.w)}</span>`;
+    const b={el,k,x:Math.random()*Math.max(0,W-96),y:H+10,v:(H/(6.5-Math.min(3,score*.25)))*(.85+Math.random()*.3),dx:(Math.random()-.5)*20,t:Math.random()*6};
+    el.onclick=()=>hit(b); arena.appendChild(el); balls.push(b); place(b);
+  }
+  const place=b=>{ b.el.style.transform=`translate(${b.x+Math.sin(b.t)*8}px,${b.y}px)` };
+  function hit(b){ if(over||b.dead) return;
+    if(b.k===target){ b.dead=true; b.el.classList.add('popped'); setTimeout(()=>b.el.remove(),300); tone(true); score++; $('#gs').textContent=`${score}/${GOAL}`;
+      if(score>=GOAL) return end(true); newTarget() }
+    else { tone(false); b.el.classList.add('shake'); setTimeout(()=>b.el.classList.remove('shake'),400); hearts--; $('#gh').textContent='❤️'.repeat(hearts)+'🤍'.repeat(3-hearts);
+      const w=WORDS.get(target); gp.innerHTML=`Chưa đúng! Từ cần tìm là <b>${esc(w.w)}</b> ${w.em}`; sayT(); if(hearts<=0) end(false) } }
+  function end(win){ over=true; stopGame(); gameOver(win?'🏆':'💪',win?'Con thắng rồi!':'Suýt nữa thôi!',`Bắn trúng ${score}/${GOAL} bóng bay`,win?5:Math.floor(score/2),()=>gBalloon(keys)) }
+  function loop(ts){ if(over) return; const dt=Math.min(.05,(ts-(last||ts))/1000); last=ts; spawnT-=dt;
+    if(spawnT<=0){ spawn(); spawnT=Math.max(.7,1.3-score*.05) }
+    for(const b of balls){ if(b.dead) continue; b.y-=b.v*dt; b.t+=dt*2; place(b); if(b.y<-130){ b.dead=true; b.el.remove() } }
+    balls=balls.filter(b=>!b.dead); GAME_RAF=requestAnimationFrame(loop) }
+  $('#gsay').onclick=sayT; if(!HAS_TTS) $('#gsay').hidden=true;
+  newTarget(); GAME_RAF=requestAnimationFrame(loop);
+}
+
+// 2) Memory match — picture/meaning ↔ English word
+function gMemory(keys){
+  const ks=shuffle(keys).slice(0,6); let cards=shuffle(ks.flatMap(k=>[{k,side:'pic'},{k,side:'word'}]));
+  let open=[],matched=0,moves=0,lock=false;
+  gameShell('🃏 Lật thẻ ghép đôi',`<div class="ghud"><span class="muted">Ghép hình với từ tiếng Anh</span><span class="pill" id="gm">0 lượt</span></div>
+  <div class="mem" style="--cols:${cards.length>10?4:5}">${cards.map((c,i)=>{const w=WORDS.get(c.k);return `<button class="mcard" data-i="${i}" aria-label="Thẻ ${i+1}"><span class="mback">?</span><span class="mface ${c.side}">${c.side==='pic'?`<span class="me">${w.em||''}</span><span class="mv">${esc(w.vi)}</span>`:`<span class="mw">${esc(w.w)}</span>`}</span></button>`}).join('')}</div>`);
+  const els=[...$('#stage').querySelectorAll('.mcard')];
+  els.forEach(el=>el.onclick=()=>{ const i=+el.dataset.i; if(lock||el.classList.contains('up')) return; el.classList.add('up'); open.push(i);
+    const c=cards[i]; if(c.side==='word') say(speakText(WORDS.get(c.k).w));
+    if(open.length===2){ moves++; $('#gm').textContent=`${moves} lượt`; const [a,b]=open; open=[];
+      if(cards[a].k===cards[b].k){ tone(true); [a,b].forEach(x=>els[x].classList.add('got')); matched++; if(matched===ks.length) setTimeout(()=>{ const st=moves<=ks.length+2?3:moves<=ks.length*2?2:1; gameOver('🃏'.repeat(1)+'⭐'.repeat(st),'Ghép xong hết!',`Con dùng ${moves} lượt`,st,()=>gMemory(keys)) },700) }
+      else { lock=true; setTimeout(()=>{ [a,b].forEach(x=>els[x].classList.remove('up')); lock=false },900) } } });
+}
+
+// 3) Letter detective — guess the word letter by letter (balloons as lives)
+function gDetective(keys){
+  const list=shuffle(keys.filter(k=>spellOf(WORDS.get(k).w))).slice(0,5);
+  if(!list.length){ gameShell('🕵️ Thám tử chữ cái','<p>Bộ từ này chưa có từ phù hợp. Chọn game khác nhé!</p>'); return }
+  let idx=0,solved=0;
+  function round(){
+    const k=list[idx], w=WORDS.get(k), target=spellOf(w.w); const got=new Set(); const MAXL=8; let lives=MAXL, done=false;
+    gameShell('🕵️ Thám tử chữ cái',`<div class="ghud"><span class="muted">Từ ${idx+1}/${list.length}</span><span class="lives" id="lv">${'🎈'.repeat(lives)}</span></div>
+      <div class="card flash" style="padding:14px">${w.em?`<div class="big" style="font-size:3.2rem">${w.em}</div>`:''}<div class="vi" style="color:var(--ink)">${esc(w.vi)}</div><div class="row" style="justify-content:center">${HAS_TTS?'<button class="btn ghost small" id="dsay">🔊 Nghe</button>':''}<button class="btn ghost small" id="dhint">💡 Gợi ý</button></div></div>
+      <div class="slots" id="ds">${[...target].map(()=>'<span class="slot"></span>').join('')}</div>
+      <div class="kb" id="kb">${[...'abcdefghijklmnopqrstuvwxyz'].map(c=>`<button class="key" data-c="${c}">${c}</button>`).join('')}</div>`);
+    const slots=[...$('#ds').children];
+    const show=()=>[...target].forEach((c,i)=>slots[i].textContent=got.has(c)?c:'');
+    $('#kb').querySelectorAll('.key').forEach(b=>b.onclick=()=>{ if(done) return; const c=b.dataset.c; b.disabled=true;
+      if(target.includes(c)){ got.add(c); b.classList.add('ok'); tone(true); show();
+        if([...target].every(x=>got.has(x))){ done=true; solved++; slots.forEach(s=>s.classList.add('ok')); say(speakText(w.w)); fin(true) } }
+      else { lives--; b.classList.add('no'); tone(false); $('#lv').textContent='🎈'.repeat(lives)+'💥'.repeat(MAXL-lives);
+        if(lives<=0){ done=true; [...target].forEach((c,i)=>{slots[i].textContent=c;slots[i].classList.add('no')}); say(speakText(w.w)); fin(false) } } });
+    const ds=$('#dsay'); if(ds) ds.onclick=()=>say(speakText(w.w));
+    $('#dhint').onclick=()=>{ if(done) return; const miss=[...target].find(c=>!got.has(c)); if(miss) $('#kb').querySelector(`.key[data-c="${miss}"]`).click(); $('#dhint').disabled=true };
+    function fin(ok){ $('#fb').innerHTML=`<div class="feedback ${ok?'ok':'no'}"><div class="wrap"><div class="msg">${ok?'Con tìm ra rồi! 🎉':'Từ bí mật là'} <b>${esc(w.w)}</b></div><button class="btn ${ok?'good':''}" id="nx">${idx+1<list.length?'Từ tiếp →':'Xem kết quả'}</button></div></div>`;
+      $('#nx').onclick=()=>{ idx++; if(idx<list.length) round(); else gameOver(solved===list.length?'🏆':'🕵️','Hết từ rồi!',`Con tìm ra ${solved}/${list.length} từ`,solved,()=>gDetective(keys)) } }
+  }
+  round();
+}
+function vGames(src){
+  src=src||'today'; const keys=gameWords(src);
+  V().innerHTML=`<div class="sec-h"><h1 style="font-size:1.8rem">Game</h1></div>
+  <div class="chips"><button class="chip" data-s="today" aria-pressed="${src==='today'}">Từ của bài hôm nay</button><button class="chip" data-s="learned" aria-pressed="${src==='learned'}">Từ đã học (ngẫu nhiên)</button></div>
+  ${wordChips(keys)}
+  <div class="gcards">${GAMES.map(g=>`<button class="gcard" data-g="${g.id}"><span class="gi">${g.icon}</span><span><b>${g.name}</b><small>${g.desc}</small></span></button>`).join('')}</div>`;
+  V().querySelectorAll('.chip').forEach(c=>c.onclick=()=>vGames(c.dataset.s));
+  V().querySelectorAll('.gcard').forEach(b=>b.onclick=()=>{ G_CTX={keys,fromLesson:false}; const st=$('#stage'); st.hidden=false; document.body.style.overflow='hidden'; GAMES.find(g=>g.id===b.dataset.g).fn(keys) });
+}
+
+// ---------- Progress & settings ----------
+function vMe(){
+  const per=LVS.map(L=>{const ks=ORDER[L];const m=ks.filter(k=>box(k)>=4).length,l=ks.filter(k=>box(k)>=1).length;return {L,n:ks.length,m,l}});
+  const tops=TOPICS.map(t=>{const ks=[...new Set(LVS.flatMap(L=>t.lv[L]||[]))];return {t,n:ks.length,l:ks.filter(k=>box(k)>=1).length}});
+  const reads=Object.keys(S.readDone).filter(k=>!k.endsWith('_day')).length;
+  V().innerHTML=`<h1 style="font-size:1.8rem">Tiến bộ của Ron</h1>
+  <div class="stats"><div class="stat"><b>${S.stars}</b><span>Ngôi sao</span></div><div class="stat"><b>${Object.keys(S.lessonDays).length}</b><span>Ngày đã học</span></div><div class="stat"><b>${reads}</b><span>Bài đã đọc</span></div></div>
+  <div class="card"><h2>Theo cấp độ</h2>${per.map(p=>`<div class="lvbar"><span><span class="lv lv-${p.L}">${LV[p.L].name}</span></span><div class="bar"><i style="width:${p.l/p.n*100}%;background:var(--lv-${p.L.toLowerCase()})"></i></div><span>${p.l}/${p.n}</span></div>`).join('')}
+  <p class="muted" style="margin:0;font-size:.9rem">Thanh màu là số từ đã học. Từ được tính là “đã thuộc” khi trả lời đúng 4 lần ôn liên tiếp.</p></div>
+  <div class="card"><h2>Theo chủ đề</h2>${tops.map(x=>`<div class="lvbar" style="grid-template-columns:1fr 1fr 60px"><span>${x.t.icon} ${esc(x.t.vi)}</span><div class="bar"><i style="width:${x.l/x.n*100}%"></i></div><span>${x.l}/${x.n}</span></div>`).join('')}</div>
+  <div class="card"><h2>Cài đặt (dành cho bố mẹ)</h2>
+    <div><b>Cấp độ học</b><div class="row" style="margin-top:6px">${LVS.map(L=>`<label class="ck"><input type="checkbox" id="lv${L}" ${S.levels.includes(L)?'checked':''}> ${LV[L].full}</label>`).join('')}</div></div>
+    <div class="row"><label for="rate"><b>Tốc độ đọc</b></label><input type="range" id="rate" min="0.6" max="1.1" step="0.05" value="${S.rate}"><button class="btn ghost small" id="testV">🔊 Thử</button></div>
+    <div class="row"><button class="btn ghost small" id="reset">Xóa toàn bộ tiến trình</button><span id="resetMsg" class="muted"></span></div>
+    <p class="muted" style="margin:0;font-size:.85rem">Tiến trình được lưu trên trình duyệt của máy này. Mỗi ngày 1 bài gồm 5 từ: học từ, luyện từ vựng, luyện nghe và đọc hiểu. Từ vựng theo Cambridge YLE Handbook 2024 (${TOTAL} từ, ${TOPICS.length} chủ đề).</p>
+  </div>`;
+  LVS.forEach(L=>$('#lv'+L).onchange=()=>{ const lv=LVS.filter(x=>$('#lv'+x).checked); if(!lv.length){$('#lv'+L).checked=true;return} S.levels=lv; save() });
+  $('#rate').oninput=e=>{S.rate=+e.target.value;save()};
+  $('#testV').onclick=()=>say('Hello Ron! Let\'s learn English together.');
+  let armed=false; $('#reset').onclick=()=>{ if(!armed){armed=true;$('#reset').textContent='Bấm lần nữa để xác nhận';$('#resetMsg').textContent='Thao tác này không hoàn tác được.';return} const keep={levels:S.levels,rate:S.rate}; for(const k of Object.keys(S)) delete S[k]; Object.assign(S,{srs:{},stars:0,streak:0,lastLesson:null,readDone:{},lessonDays:{},ai:[],done:{},gen:{}},keep); save(); go('me') };
+}
+
+hdr(); go('today');
+})();
+</script>
+
+</body></html>
